@@ -139,11 +139,11 @@
             const sendBtn = document.getElementById("sendCodeBtn");
             isSending = true;
             sendBtn.disabled = true;
-            sendBtn.textContent = "Отправка...";
+            sendBtn.textContent = "Отправка (до 30 сек)...";
 
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 8000);
+                const timeoutId = setTimeout(() => controller.abort(), 30000);
 
                 const response = await fetch("https://shopify-server-3iuh.onrender.com/send-recovery-code", {
                     method: "POST",
@@ -165,7 +165,7 @@
             } catch (error) {
                 let errorText = "Ошибка подключения к серверу";
                 if (error.name === "AbortError") {
-                    errorText = "Сервер не отвечает. Проверьте соединение.";
+                    errorText = "Сервер не отвечает. Пожалуйста, подождите 30 секунд и попробуйте снова.";
                 }
                 showMessage(errorText, false, 1);
             } finally {
@@ -209,11 +209,11 @@
             const resetBtn = document.getElementById("resetPasswordBtn");
             isResetting = true;
             resetBtn.disabled = true;
-            resetBtn.textContent = "Сохранение...";
+            resetBtn.textContent = "Сохранение (до 30 сек)...";
 
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 8000);
+                const timeoutId = setTimeout(() => controller.abort(), 30000);
 
                 const response = await fetch("https://shopify-server-3iuh.onrender.com/reset-password", {
                     method: "POST",
@@ -236,7 +236,7 @@
             } catch (error) {
                 let errorText = "Ошибка подключения к серверу";
                 if (error.name === "AbortError") {
-                    errorText = "Сервер не отвечает. Проверьте соединение.";
+                    errorText = "Сервер не отвечает. Пожалуйста, подождите 30 секунд и попробуйте снова.";
                 }
                 showMessage(errorText, false, 3);
             } finally {
