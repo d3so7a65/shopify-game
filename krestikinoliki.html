@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Крестики-Нолики</title>
+    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="game.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="nav">
+        <div class="container">
+            <div class="nav-row">
+                <a href="index.html" class="logo"><strong>Shopify</strong> Game</a>
+                <button class="dark-mode-btn">
+                    <img src="img/icons/sun.svg" alt="Light mode" class="dark-mode-btn__icon">
+                    <img src="img/icons/moon.svg" alt="Dark mode" class="dark-mode-btn__icon">
+                </button>
+                <ul class="nav-list">
+                    <li class="nav-list__item"><a href="index.html" class="nav-list__link">Главная</a></li>
+                    <li class="nav-list__item"><a href="contacts.html" class="nav-list__link">Контакты</a></li>
+                    <li class="nav-list__item"><div id="user-info"></div></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <main class="section">
+        <div class="container">
+            <div class="project-details">
+                <div class="tic-tac-toe-container">
+                    <div class="game-header">
+                        <div class="game-title">Крестики-Нолики</div>
+                        <div class="game-subtitle">Игра против ИИ – попробуй победить!</div>
+                    </div>
+                    
+                    <div class="game-area">
+                        <div class="players-info">
+                            <div class="player-card player-red">
+                                <div class="player-name" id="player-name-red">Игрок</div>
+                                <div class="score" id="red-score">0</div>
+                            </div>
+                            
+                            <div class="player-card player-blue">
+                                <div class="player-name">ИИ</div>
+                                <div class="score" id="blue-score">0</div>
+                            </div>
+                        </div>
+                        
+                        <div class="game-board-container">
+                            <div class="status" id="status">Выберите сторону</div>
+                            
+                            <div class="game-board" id="board">
+                                <canvas id="lineCanvas" class="winning-line-canvas"></canvas>
+                                <div class="cell" data-cell-index="0"></div>
+                                <div class="cell" data-cell-index="1"></div>
+                                <div class="cell" data-cell-index="2"></div>
+                                <div class="cell" data-cell-index="3"></div>
+                                <div class="cell" data-cell-index="4"></div>
+                                <div class="cell" data-cell-index="5"></div>
+                                <div class="cell" data-cell-index="6"></div>
+                                <div class="cell" data-cell-index="7"></div>
+                                <div class="cell" data-cell-index="8"></div>
+                            </div>
+                            
+                            <div class="controls">
+                                <button class="game-btn" id="restart"><i class="fas fa-sync-alt"></i> Новая Игра</button>
+                                <button class="game-btn blue" id="reset-scores"><i class="fas fa-trash-alt"></i> Сбросить Счет</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <footer class="footer">
+        <div class="container">
+            <div class="footer__wrapper">
+                <ul class="social">
+                    <li class="social__item"><a href="#!"><img src="img/icons/vk.svg" alt="Link"></a></li>
+                    <li class="social__item"><a href="#!"><img src="img/icons/instagram.svg" alt="Link"></a></li>
+                    <li class="social__item"><a href="#!"><img src="img/icons/twitter.svg" alt="Link"></a></li>
+                    <li class="social__item"><a href="#!"><img src="img/icons/gitHub.svg" alt="Link"></a></li>
+                    <li class="social__item"><a href="#!"><img src="img/icons/linkedIn.svg" alt="Link"></a></li>
+                </ul>
+                <div class="copyright">
+                    <p>© 2026 IT.Москва</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <script src="js/main-obf.js"></script>
+    <script>
+        const user = JSON.parse(localStorage.getItem("user"));
+        const userInfo = document.getElementById("user-info");
+
+        if (user) {
+            const avatarUrl = user.avatar || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+            userInfo.innerHTML = `
+                <div class="profile-menu">
+                    <div class="profile-btn" onclick="toggleMenu()">
+                        <img src="${avatarUrl}" class="avatar">
+                        <span>${user.name}</span>
+                    </div>
+                    <div class="dropdown-menu" id="dropdown-menu">
+                        <button onclick="logout()">Выйти</button>
+                    </div>
+                </div>
+            `;
+        } else {
+            userInfo.innerHTML = `<a href="lgpass.html" class="nav-list__link">Войти</a>`;
+        }
+
+        function logout() {
+            localStorage.removeItem("user");
+            window.location.href = 'lgpass.html';
+        }
+
+        function toggleMenu() {
+            document.getElementById("dropdown-menu")?.classList.toggle("show-menu");
+        }
+
+        (function() {
+            const userCheck = JSON.parse(localStorage.getItem("user"));
+            if (!userCheck || !userCheck.email) {
+                window.location.href = 'lgpass.html';
+                return;
+            }
+        })();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            let currentUser = JSON.parse(localStorage.getItem("user"));
+            let playerSymbol = null;
+            let botSymbol = null;
+            let gameActive = false;
+            let playerScore = 0;
+            let botScore = 0;
+            let gameBoard = ['', '', '', '', '', '', '', '', ''];
+            let waitingForPlayer = false;
+            
+            const cells = document.querySelectorAll('.cell');
+            const board = document.getElementById('board');
+            const lineCanvas = document.getElementById('lineCanvas');
+            const ctx = lineCanvas.getContext('2d');
+            const statusElement = document.getElementById('status');
+            const redScoreElement = document.getElementById('red-score');
+            const blueScoreElement = document.getElementById('blue-score');
+            const restartButton = document.getElementById('restart');
+            const resetScoresButton = document.getElementById('reset-scores');
+            const playerRedCard = document.querySelector('.player-red');
+            const playerBlueCard = document.querySelector('.player-blue');
+            const playerNameRed = document.getElementById('player-name-red');
+            
+            if (currentUser) {
+                playerNameRed.textContent = currentUser.name;
+            }
+            
+            function updateCanvasSize() {
+                const rect = board.getBoundingClientRect();
+                lineCanvas.width = rect.width;
+                lineCanvas.height = rect.height;
+                lineCanvas.style.width = rect.width + 'px';
+                lineCanvas.style.height = rect.height + 'px';
+            }
+            
+            window.addEventListener('resize', () => {
+                updateCanvasSize();
+                drawStoredLine();
+            });
+            
+            let storedLine = null;
+            
+            function drawWinningLine(combo) {
+                storedLine = combo;
+                updateCanvasSize();
+                
+                const boardRect = board.getBoundingClientRect();
+                const cellsRects = [];
+                
+                cells.forEach(cell => {
+                    const rect = cell.getBoundingClientRect();
+                    cellsRects.push({
+                        x: rect.left - boardRect.left,
+                        y: rect.top - boardRect.top,
+                        width: rect.width,
+                        height: rect.height
+                    });
+                });
+                
+                const indices = combo;
+                const startRect = cellsRects[indices[0]];
+                const endRect = cellsRects[indices[2]];
+                
+                const startX = startRect.x + startRect.width / 2;
+                const startY = startRect.y + startRect.height / 2;
+                const endX = endRect.x + endRect.width / 2;
+                const endY = endRect.y + endRect.height / 2;
+                
+                ctx.clearRect(0, 0, lineCanvas.width, lineCanvas.height);
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+                ctx.lineTo(endX, endY);
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 6;
+                ctx.stroke();
+            }
+            
+            function drawStoredLine() {
+                if (storedLine) {
+                    drawWinningLine(storedLine);
+                } else {
+                    clearWinningLine();
+                }
+            }
+            
+            function clearWinningLine() {
+                storedLine = null;
+                if (ctx) {
+                    ctx.clearRect(0, 0, lineCanvas.width, lineCanvas.height);
+                }
+            }
+            
+            const winningCombinations = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8],
+                [0, 3, 6], [1, 4, 7], [2, 5, 8],
+                [0, 4, 8], [2, 4, 6]
+            ];
+            
+            function showChoiceDialog() {
+                const overlay = document.createElement('div');
+                overlay.className = 'choice-overlay';
+                overlay.innerHTML = `
+                    <div class="choice-box">
+                        <div class="choice-title">Выберите сторону</div>
+                        <div class="choice-buttons">
+                            <div class="choice-btn red" data-choice="X">
+                                <div class="choice-icon"><i class="fas fa-times"></i></div>
+                                <div class="choice-text">Крестики</div>
+                            </div>
+                            <div class="choice-btn blue" data-choice="O">
+                                <div class="choice-icon"><i class="far fa-circle"></i></div>
+                                <div class="choice-text">Нолики</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(overlay);
+                
+                overlay.querySelector('[data-choice="X"]').addEventListener('click', () => {
+                    playerSymbol = 'X';
+                    botSymbol = 'O';
+                    overlay.remove();
+                    startNewRound();
+                });
+                
+                overlay.querySelector('[data-choice="O"]').addEventListener('click', () => {
+                    playerSymbol = 'O';
+                    botSymbol = 'X';
+                    overlay.remove();
+                    startNewRound();
+                });
+            }
+            
+            function startNewRound() {
+                gameActive = true;
+                gameBoard = ['', '', '', '', '', '', '', '', ''];
+                clearWinningLine();
+                
+                cells.forEach(cell => {
+                    cell.classList.remove('x', 'o');
+                    cell.style.pointerEvents = 'auto';
+                });
+                
+                if (playerSymbol === 'X') {
+                    waitingForPlayer = true;
+                    playerRedCard.classList.add('active');
+                    playerBlueCard.classList.remove('active');
+                    statusElement.textContent = 'Ваш ход';
+                    statusElement.style.color = '';
+                } else {
+                    waitingForPlayer = false;
+                    playerRedCard.classList.remove('active');
+                    playerBlueCard.classList.add('active');
+                    statusElement.textContent = 'Ход Профессионала...';
+                    statusElement.style.color = '';
+                    setTimeout(() => botMove(), 300);
+                }
+            }
+            
+            function updateScores() {
+                redScoreElement.textContent = playerScore;
+                blueScoreElement.textContent = botScore;
+            }
+            
+            function checkWinner(board, symbol) {
+                for (const combo of winningCombinations) {
+                    const [a, b, c] = combo;
+                    if (board[a] === symbol && board[b] === symbol && board[c] === symbol) {
+                        return combo;
+                    }
+                }
+                return null;
+            }
+            
+            function isDraw(board) {
+                return !board.includes('');
+            }
+            
+            function getEmptyCells() {
+                const empty = [];
+                for (let i = 0; i < 9; i++) {
+                    if (gameBoard[i] === '') empty.push(i);
+                }
+                return empty;
+            }
+            
+            function botMove() {
+                if (!gameActive || waitingForPlayer) return;
+                
+                let emptyCells = getEmptyCells();
+                if (emptyCells.length === 0) return;
+                
+                let chosenMove = null;
+                
+                for (let i of emptyCells) {
+                    gameBoard[i] = botSymbol;
+                    if (checkWinner(gameBoard, botSymbol)) {
+                        chosenMove = i;
+                        gameBoard[i] = '';
+                        break;
+                    }
+                    gameBoard[i] = '';
+                }
+                
+                if (!chosenMove) {
+                    for (let i of emptyCells) {
+                        gameBoard[i] = playerSymbol;
+                        if (checkWinner(gameBoard, playerSymbol)) {
+                            chosenMove = i;
+                            gameBoard[i] = '';
+                            break;
+                        }
+                        gameBoard[i] = '';
+                    }
+                }
+                
+                if (!chosenMove) {
+                    const center = 4;
+                    if (emptyCells.includes(center)) {
+                        chosenMove = center;
+                    } else {
+                        const randomIndex = Math.floor(Math.random() * emptyCells.length);
+                        chosenMove = emptyCells[randomIndex];
+                    }
+                }
+                
+                setTimeout(() => {
+                    if (!gameActive || waitingForPlayer) return;
+                    const ended = makeMove(chosenMove, botSymbol);
+                    if (!ended && gameActive) {
+                        waitingForPlayer = true;
+                        statusElement.textContent = 'Ваш ход!';
+                        if (playerSymbol === 'X') {
+                            playerRedCard.classList.add('active');
+                            playerBlueCard.classList.remove('active');
+                        } else {
+                            playerRedCard.classList.remove('active');
+                            playerBlueCard.classList.add('active');
+                        }
+                    }
+                }, 200);
+            }
+            
+            function makeMove(index, symbol) {
+                if (!gameActive || gameBoard[index] !== '') return false;
+                
+                gameBoard[index] = symbol;
+                const cell = cells[index];
+                cell.classList.add(symbol === 'X' ? 'x' : 'o');
+                
+                const winCombo = checkWinner(gameBoard, symbol);
+                if (winCombo) {
+                    drawWinningLine(winCombo);
+                    endRound(symbol === playerSymbol ? 'player' : 'bot');
+                    return true;
+                }
+                
+                if (isDraw(gameBoard)) {
+                    endRound('draw');
+                    return true;
+                }
+                
+                return false;
+            }
+            
+            function endRound(winner) {
+                gameActive = false;
+                cells.forEach(cell => {
+                    cell.style.pointerEvents = 'none';
+                });
+                
+                if (winner === 'player') {
+                    playerScore++;
+                    updateScores();
+                    statusElement.textContent = `${currentUser ? currentUser.name : 'Игрок'} победил!`;
+                    statusElement.style.color = '#ff416c';
+                    
+                    setTimeout(() => {
+                        if (playerScore >= 10) {
+                            showVictory(`${currentUser ? currentUser.name : 'Игрок'} Вы победили!`);
+                        } else {
+                            startNewRound();
+                        }
+                    }, 1500);
+                    
+                } else if (winner === 'bot') {
+                    botScore++;
+                    updateScores();
+                    statusElement.textContent = 'ИИ победил!';
+                    statusElement.style.color = '#4cc9f0';
+                    
+                    setTimeout(() => {
+                        if (botScore >= 10) {
+                            showVictory('ИИ одержал победу!');
+                        } else {
+                            startNewRound();
+                        }
+                    }, 1500);
+                    
+                } else if (winner === 'draw') {
+                    statusElement.textContent = 'Ничья!';
+                    statusElement.style.color = '#ffeb3b';
+                    
+                    setTimeout(() => {
+                        startNewRound();
+                    }, 1200);
+                }
+            }
+            
+            function showVictory(message) {
+                playerScore = 0;
+                botScore = 0;
+                updateScores();
+                
+                const victoryDiv = document.createElement('div');
+                victoryDiv.className = 'victory-message';
+                victoryDiv.innerHTML = `
+                    <div class="victory-text">${message}</div>
+                    <button class="victory-btn">Продолжить</button>
+                `;
+                document.body.appendChild(victoryDiv);
+                
+                victoryDiv.querySelector('.victory-btn').onclick = () => {
+                    victoryDiv.remove();
+                    playerSymbol = null;
+                    botSymbol = null;
+                    gameActive = false;
+                    cells.forEach(cell => {
+                        cell.classList.remove('x', 'o');
+                        cell.style.pointerEvents = 'none';
+                    });
+                    statusElement.textContent = 'Выберите сторону';
+                    statusElement.style.color = '';
+                    playerRedCard.classList.remove('active');
+                    playerBlueCard.classList.remove('active');
+                    clearWinningLine();
+                    showChoiceDialog();
+                };
+            }
+            
+            function handleCellClick(e) {
+                const cell = e.target;
+                const cellIndex = parseInt(cell.getAttribute('data-cell-index'));
+                
+                if (!gameActive || !waitingForPlayer || gameBoard[cellIndex] !== '') return;
+                
+                const ended = makeMove(cellIndex, playerSymbol);
+                
+                if (!ended && gameActive) {
+                    waitingForPlayer = false;
+                    statusElement.textContent = 'Ход ИИ';
+                    if (playerSymbol === 'X') {
+                        playerRedCard.classList.remove('active');
+                        playerBlueCard.classList.add('active');
+                    } else {
+                        playerRedCard.classList.add('active');
+                        playerBlueCard.classList.remove('active');
+                    }
+                    botMove();
+                }
+            }
+            
+            function resetGame() {
+                if (playerSymbol) {
+                    startNewRound();
+                } else {
+                    showChoiceDialog();
+                }
+            }
+            
+            function resetScores() {
+                playerScore = 0;
+                botScore = 0;
+                updateScores();
+                playerSymbol = null;
+                botSymbol = null;
+                gameActive = false;
+                cells.forEach(cell => {
+                    cell.classList.remove('x', 'o');
+                    cell.style.pointerEvents = 'none';
+                });
+                statusElement.textContent = 'Выберите сторону';
+                statusElement.style.color = '';
+                playerRedCard.classList.remove('active');
+                playerBlueCard.classList.remove('active');
+                clearWinningLine();
+                showChoiceDialog();
+            }
+            
+            cells.forEach(cell => {
+                cell.addEventListener('click', handleCellClick);
+            });
+            
+            restartButton.addEventListener('click', resetGame);
+            resetScoresButton.addEventListener('click', resetScores);
+            
+            showChoiceDialog();
+        });
+    </script>
+</body>
+</html>

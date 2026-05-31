@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Авторизация</title>
+    <link rel="stylesheet" href="style.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Poppins:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        .twofa-container { display: none; text-align: center; }
+        .twofa-input { margin-top: 15px; }
+        .twofa-input input { text-align: center; font-size: 1.2rem; letter-spacing: 5px; padding: 10px; }
+        .form-message { margin-top: 15px; padding: 10px; border-radius: 8px; font-size: 0.85rem; display: none; }
+        .form-message.success { background: rgba(46, 204, 113, 0.2); color: #2ecc71; border: 1px solid #2ecc71; }
+        .form-message.error { background: rgba(231, 76, 60, 0.2); color: #e74c3c; border: 1px solid #e74c3c; }
+        .twofa-container .input-box i { font-size: 1.2rem; }
+        .twofa-container .input-box input { font-size: 1rem; letter-spacing: 3px; }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <form id="login-form">
+            <div class="logo-icon"><i class='bx bx-joystick'></i></div>
+            <h1>Авторизация</h1>
+            <div class="auth-subtitle" id="formSubtitle">Авторизируйтесь и начните играть!</div>
+            <div id="loginFields">
+                <div class="input-box">
+                    <input type="email" id="email-input" placeholder="Введите Email" required name="email">
+                    <i class='bx bx-user input-icon'></i>
+                </div>
+                <div class="input-box">
+                    <input type="password" id="password-input" placeholder="Введите пароль" required name="password">
+                    <i class='bx bxs-lock-alt input-icon'></i>
+                    <i class='bx bx-hide eye-icon' id="togglePassword"></i>
+                </div>
+                <div class="remember">
+                    <label><input type="checkbox" id="rememberCheckbox">Запомнить меня?</label>
+                    <a href="recovery.html">Забыл пароль?</a>
+                </div>
+            </div>
+            <div id="twofaFields" class="twofa-container">
+                <div class="input-box twofa-input">
+                    <input type="text" id="twofa-code" placeholder="6-значный код" maxlength="6" pattern="[0-9]{6}" autocomplete="off">
+                    <i class='bx bx-shield-quarter input-icon'></i>
+                </div>
+            </div>
+            <button type="submit" class="btn" id="submitBtn">Войти</button>
+            <div id="formMessage" class="form-message"></div>
+            <div class="register-link">
+                <p>У вас нет аккаунта? <a href="register.html">Регистрация</a></p>
+            </div>
+        </form>
+    </div>
+    <script>
+        const form = document.getElementById("login-form");
+        const submitBtn = document.getElementById("submitBtn");
+        const rememberCheck = document.getElementById("rememberCheckbox");
+        const emailInput = document.getElementById("email-input");
+        const passwordInput = document.getElementById("password-input");
+        const loginFields = document.getElementById("loginFields");
+        const twofaFields = document.getElementById("twofaFields");
+        const twofaCode = document.getElementById("twofa-code");
+        const formSubtitle = document.getElementById("formSubtitle");
+        let isSubmitting = false;
+        let pendingUser = null;
+        const formMessage = document.getElementById("formMessage");
+
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+
+        function showMessage(message, isSuccess = false) {
+            formMessage.textContent = message;
+            formMessage.className = `form-message ${isSuccess ? 'success' : 'error'}`;
+            formMessage.style.display = 'block';
+            setTimeout(() => { formMessage.style.display = 'none'; }, 3500);
+        }
+
+        function encryptData(data) { return btoa(encodeURIComponent(data)); }
+        function decryptData(encrypted) { try { return decodeURIComponent(atob(encrypted)); } catch(e) { return ""; } }
+
+        function saveRememberedCredentials(email, password) {
+            if (rememberCheck.checked) {
+                localStorage.setItem("rememberedEmail", email);
+                localStorage.setItem("rememberedPasswordEnc", encryptData(password));
+                localStorage.setItem("rememberMeEnabled", "true");
+            } else {
+                localStorage.removeItem("rememberedEmail");
+                localStorage.removeItem("rememberedPasswordEnc");
+                localStorage.setItem("rememberMeEnabled", "false");
+            }
+        }
+
+        function loadRememberedCredentials() {
+            const rememberEnabled = localStorage.getItem("rememberMeEnabled");
+            const savedEmail = localStorage.getItem("rememberedEmail");
+            const savedPasswordEnc = localStorage.getItem("rememberedPasswordEnc");
+            if (rememberEnabled === "true" && savedEmail && savedPasswordEnc) {
+                const savedPassword = decryptData(savedPasswordEnc);
+                if (savedEmail) emailInput.value = savedEmail;
+                if (savedPassword) passwordInput.value = savedPassword;
+                rememberCheck.checked = true;
+            }
+        }
+        loadRememberedCredentials();
+
+        const togglePassword = document.getElementById("togglePassword");
+        togglePassword.addEventListener("click", function() {
+            const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
+            passwordInput.setAttribute("type", type);
+            this.classList.toggle("bx-show");
+            this.classList.toggle("bx-hide");
+        });
+
+        async function checkTwoFA(email) {
+            try {
+                const response = await fetch(`http://localhost:5000/user/${encodeURIComponent(email)}`, { credentials: 'include' });
+                if (response.ok) { const data = await response.json(); return data.twoFactorEnabled === true; }
+                return false;
+            } catch (error) { console.error("Ошибка проверки 2FA:", error); return false; }
+        }
+
+        async function verifyTwoFACode(email, code) {
+            try {
+                const response = await fetch("http://localhost:5000/api/2fa/login", {
+                    method: "POST", headers: { "Content-Type": "application/json" },
+                    credentials: 'include',
+                    body: JSON.stringify({ email: email, token: code })
+                });
+                return response.ok;
+            } catch (error) { console.error("Ошибка проверки 2FA кода:", error); return false; }
+        }
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            if (isSubmitting) return;
+            
+            if (twofaFields.style.display === "block" && pendingUser) {
+                const code = twofaCode.value.trim();
+                if (!code || code.length !== 6) { showMessage("Введите 6-значный код из приложения аутентификации", false); return; }
+                if (!/^\d+$/.test(code)) { showMessage("Код должен содержать только цифры", false); return; }
+
+                isSubmitting = true;
+                submitBtn.disabled = true;
+                submitBtn.textContent = "Проверка...";
+
+                try {
+                    const isValid = await verifyTwoFACode(pendingUser.email, code);
+                    if (isValid) {
+                        showMessage("✅ 2FA код подтверждён! Вход выполнен.", true);
+                        const token = getCookie('token');
+                        if (token) localStorage.setItem('authToken', token);
+                        const userData = { id: pendingUser.id, name: pendingUser.name, email: pendingUser.email, avatar: pendingUser.avatar || null, twoFactorEnabled: true };
+                        localStorage.setItem("user", JSON.stringify(userData));
+                        if (rememberCheck.checked) saveRememberedCredentials(pendingUser.email, pendingUser.password);
+                        setTimeout(() => { window.location.href = "index.html"; }, 1000);
+                    } else {
+                        showMessage("❌ Неверный код 2FA", false);
+                        twofaCode.value = "";
+                        resetButton("Подтвердить");
+                    }
+                } catch (error) { showMessage("❌ Ошибка проверки 2FA", false); resetButton("Подтвердить");
+                } finally { isSubmitting = false; }
+                return;
+            }
+
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+
+            if (!email) { showMessage("Введите Email", false); return; }
+            if (!password) { showMessage("Введите пароль", false); return; }
+            if (!email.includes("@") || !email.includes(".")) { showMessage("Введите корректный email адрес", false); return; }
+
+            isSubmitting = true;
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Вход...";
+
+            try {
+                const response = await fetch("http://localhost:5000/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, password }),
+                    credentials: 'include'
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    const userData = {
+                        id: result.user?.id,
+                        name: result.user?.name,
+                        email: result.user?.email,
+                        avatar: result.user?.avatar || null,
+                        twoFactorEnabled: result.user?.twoFactorEnabled || false
+                    };
+                    
+                    const hasTwoFA = userData.twoFactorEnabled || await checkTwoFA(email);
+                    
+                    if (hasTwoFA) {
+                        pendingUser = userData;
+                        pendingUser.password = password;
+                        loginFields.style.display = "none";
+                        twofaFields.style.display = "block";
+                        formSubtitle.textContent = "Введите код двухфакторной аутентификации";
+                        submitBtn.textContent = "Подтвердить";
+                        twofaCode.value = "";
+                        twofaCode.focus();
+                        resetButton("Подтвердить");
+                        showMessage("📱 Введите код из приложения аутентификации", true);
+                    } else {
+                        const tokenToStore = result.token || getCookie('token');
+                        if (tokenToStore) {
+                            localStorage.setItem('authToken', tokenToStore);
+                            console.log("Токен сохранён");
+                        } else {
+                            console.error("Токен не получен!");
+                        }
+                        
+                        localStorage.setItem("user", JSON.stringify(userData));
+                        
+                        if (rememberCheck.checked) {
+                            saveRememberedCredentials(email, password);
+                        } else {
+                            localStorage.removeItem("rememberedEmail");
+                            localStorage.removeItem("rememberedPasswordEnc");
+                            localStorage.setItem("rememberMeEnabled", "false");
+                        }
+
+                        showMessage("Успешно!", true);
+                        setTimeout(() => { window.location.href = "index.html"; }, 700);
+                    }
+                } else if (response.status === 403 && result.isBanned) {
+                    showMessage("❌ Ваш аккаунт заблокирован администратором", false);
+                    resetButton("Войти");
+                } else {
+                    const errorMsg = result.message || "Неверный email или пароль";
+                    showMessage(errorMsg, false);
+                    resetButton("Войти");
+                }
+            } catch (error) {
+                console.error("Ошибка:", error);
+                showMessage("Ошибка подключения к серверу. Проверьте, запущен ли сервер на порту 5000", false);
+                resetButton("Войти");
+            } finally {
+                isSubmitting = false;
+            }
+        });
+
+        function resetButton(originalText) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText || "Войти";
+            isSubmitting = false;
+        }
+    </script>
+</body>
+</html>

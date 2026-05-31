@@ -1,0 +1,251 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    min-height: 100vh;
+    background-color: #252526;
+    background-image: url('./background.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    font-family: 'DM Sans', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.wrapper {
+    width: 100%;
+    max-width: 460px;
+    background: #171718;
+    border: 1px solid #26292D;
+    border-radius: 24px;
+    padding: 40px 32px 44px;
+    box-shadow: 0px 25px 45px rgba(0, 0, 0, 0.4);
+}
+
+.logo-icon {
+    font-size: 48px;
+    color: #5C62EC;
+    margin-bottom: 12px;
+    text-align: center;
+}
+
+.wrapper h1 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 32px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.5px;
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.auth-subtitle {
+    font-size: 14px;
+    color: #8d8d8d;
+    font-weight: 400;
+    border-top: 1px solid #26292D;
+    display: inline-block;
+    padding-top: 10px;
+    text-align: center;
+    width: 100%;
+    margin-bottom: 28px;
+}
+
+.wrapper .input-box {
+    position: relative;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.input-box input {
+    width: 100%;
+    background: #252526;
+    border: 1.5px solid #26292D;
+    border-radius: 12px;
+    padding: 14px 48px 14px 48px;
+    font-size: 15px;
+    font-family: 'DM Sans', sans-serif;
+    color: #fff;
+    font-weight: 500;
+    outline: none;
+}
+
+.input-box input:focus {
+    border-color: #5C62EC;
+    box-shadow: 0 0 0 3px rgba(92, 98, 236, 0.2);
+    background: #2a2a2a;
+}
+
+.input-box input::placeholder {
+    color: #6a6a6a;
+    font-weight: 400;
+}
+
+.input-box .input-icon {
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 20px;
+    color: #5C62EC;
+    opacity: 0.8;
+    pointer-events: none;
+}
+
+.input-box .eye-icon {
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 20px;
+    color: #ffffff;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+    z-index: 10;
+}
+
+.input-box .eye-icon:hover {
+    opacity: 1;
+}
+
+.wrapper .remember {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 20px 0 28px;
+    font-size: 14px;
+}
+
+.remember label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #aaa;
+    cursor: pointer;
+    font-weight: 400;
+}
+
+.remember label input {
+    width: 16px;
+    height: 16px;
+    accent-color: #5C62EC;
+    cursor: pointer;
+    margin: 0;
+}
+
+.remember a {
+    color: #5C62EC;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.remember a:hover {
+    opacity: 0.8;
+    text-decoration: underline;
+}
+
+.wrapper .btn {
+    width: 100%;
+    height: 48px;
+    padding: 12px 28px;
+    border-radius: 5px;
+    background-color: #5C62EC;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    letter-spacing: 0.15px;
+    border: none;
+    cursor: pointer;
+    margin-bottom: 24px;
+}
+
+.wrapper .btn:hover {
+    opacity: 0.8;
+}
+
+.wrapper .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.form-message {
+    text-align: center;
+    margin-top: -16px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    padding: 10px 12px;
+    border-radius: 8px;
+    display: none;
+}
+
+.form-message.success {
+    display: block;
+    color: #2ecc71;
+    background: transparent;
+    border: none;
+}
+
+.form-message.error {
+    display: block;
+    color: #e74c3c;
+    background: transparent;
+    border: none;
+}
+
+.wrapper .register-link {
+    text-align: center;
+    border-top: 1px solid #26292D;
+    padding-top: 24px;
+}
+
+.register-link p {
+    color: #8d8d8d;
+    font-size: 14px;
+}
+
+.register-link p a {
+    color: #5C62EC;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.register-link p a:hover {
+    opacity: 0.8;
+    text-decoration: underline;
+}
+
+@media (max-width: 500px) {
+    .wrapper {
+        padding: 28px 20px 36px;
+    }
+    .wrapper h1 {
+        font-size: 26px;
+    }
+    .logo-icon {
+        font-size: 40px;
+    }
+}
+
+.step {
+    display: none;
+}
+
+.step.active {
+    display: block;
+}
+
+.form-message {
+    margin-top: 20px;
+    margin-bottom: 0;
+}

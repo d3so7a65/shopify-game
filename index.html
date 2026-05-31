@@ -1,0 +1,2550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopify Game</title>
+    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .profile-container {
+            max-width: 1200px;
+            width: 95%;
+            margin: 30px auto;
+            padding: 20px;
+        }
+        .profile-card {
+            background: var(--project-card-bg);
+            border-radius: 30px;
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+            margin-bottom: 30px;
+        }
+        .banner-area {
+            position: relative;
+            height: 220px;
+            background: linear-gradient(135deg, #1e2a3a 0%, #0f1724 100%);
+            overflow: hidden;
+        }
+        .banner-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .banner-edit-btn {
+            position: absolute;
+            bottom: 15px;
+            right: 20px;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(10px);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            z-index: 10;
+            transition: background 0.2s;
+        }
+        .banner-edit-btn:hover {
+            background: var(--accent);
+        }
+        .profile-info {
+            display: flex;
+            align-items: center;
+            padding: 0 35px 25px 35px;
+            position: relative;
+            margin-top: -60px;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        .avatar-large {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            border: 4px solid var(--accent);
+            background: var(--page-bg);
+            object-fit: cover;
+        }
+        .avatar-edit-icon {
+            position: absolute;
+            bottom: 5px;
+            left: 105px;
+            background: var(--accent);
+            color: white;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.85rem;
+            border: none;
+            transition: transform 0.2s;
+        }
+        .avatar-edit-icon:hover {
+            transform: scale(1.1);
+        }
+        .user-info-details {
+            flex: 1;
+        }
+        .user-name {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--text-color);
+            margin-bottom: 8px;
+        }
+        .user-reg-date {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+            margin-bottom: 35px;
+        }
+        .stat-box {
+            background: rgba(30, 40, 70, 0.5);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--accent);
+        }
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+        .stat-label-small {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+        .favorite-game {
+            font-size: 1.5rem;
+            color: #ffd966;
+        }
+        .games-section {
+            background: var(--project-card-bg);
+            border-radius: 25px;
+            padding: 30px;
+            box-shadow: var(--box-shadow);
+        }
+        .section-header {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text-color);
+            margin-bottom: 25px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--accent);
+        }
+        .games-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .game-row {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 15px 20px;
+            background: rgba(30, 40, 70, 0.3);
+            border-radius: 18px;
+            transition: all 0.2s;
+        }
+        .game-row:hover {
+            background: rgba(30, 40, 70, 0.5);
+        }
+        .game-icon {
+            width: 65px;
+            height: 65px;
+            border-radius: 12px;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .game-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .game-info-block {
+            flex: 1;
+        }
+        .game-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+        .game-stats-row {
+            display: flex;
+            gap: 20px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 5px;
+            flex-wrap: wrap;
+        }
+        .game-stats-row span {
+            background: rgba(0,0,0,0.3);
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+        .progress-bar-bg {
+            height: 5px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            margin-top: 10px;
+            width: 100%;
+        }
+        .progress-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 4px;
+            width: 0%;
+        }
+        .play-game-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 8px 25px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: transform 0.2s;
+        }
+        .play-game-btn:hover {
+            transform: translateY(-2px);
+        }
+        @media (max-width: 700px) {
+            .profile-info {
+                flex-direction: column;
+                text-align: center;
+                justify-content: center;
+            }
+            .stats-row {
+                grid-template-columns: 1fr;
+            }
+            .game-row {
+                flex-wrap: wrap;
+            }
+            .user-info-details {
+                text-align: center;
+            }
+            .avatar-edit-icon {
+                left: 50%;
+                transform: translateX(-50%);
+                margin-left: 50px;
+            }
+        }
+        .success-message {
+            text-align: center;
+            color: #2ecc71;
+            font-size: 0.9rem;
+            margin-top: 15px;
+            font-weight: 500;
+            display: none;
+        }
+        .success-message.show {
+            display: block;
+        }
+        .error-message {
+            text-align: center;
+            color: #e74c3c;
+            font-size: 0.9rem;
+            margin-top: 15px;
+            font-weight: 500;
+            display: none;
+        }
+        .error-message.show {
+            display: block;
+        }
+        .settings-item {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .avatar-edit-icon i, .banner-edit-btn i {
+            pointer-events: none;
+        }
+        .support-chat {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            z-index: 9999;
+        }
+        .chat-toggle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--accent, #5C62EC);
+            border: none;
+            color: white;
+            font-size: 1.8rem;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .chat-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 25px rgba(0,0,0,0.4);
+        }
+        .chat-window {
+            position: absolute;
+            bottom: 75px;
+            right: 0;
+            width: 380px;
+            height: 550px;
+            background: var(--project-card-bg, #1e1e2e);
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid var(--accent, #5C62EC);
+            animation: slideUp 0.3s ease;
+        }
+        .chat-window.open {
+            display: flex;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .chat-header {
+            padding: 15px 18px;
+            background: var(--accent, #5C62EC);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .chat-header h4 {
+            margin: 0;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .close-chat {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+        .chat-categories {
+            display: flex;
+            gap: 8px;
+            padding: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            flex-wrap: wrap;
+        }
+        .chat-category {
+            padding: 5px 12px;
+            background: rgba(92, 98, 236, 0.2);
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: all 0.2s;
+        }
+        .chat-category.active {
+            background: var(--accent, #5C62EC);
+            color: white;
+        }
+        .ticket-header {
+            padding: 8px 15px;
+            background: rgba(92, 98, 236, 0.15);
+            font-size: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .ticket-number {
+            font-weight: bold;
+            color: var(--accent);
+        }
+        .ticket-status {
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+        .ticket-status.active {
+            background: #2ecc71;
+            color: white;
+        }
+        .ticket-status.closed {
+            background: #e74c3c;
+            color: white;
+        }
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .message {
+            max-width: 85%;
+            padding: 8px 12px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+        }
+        .message.user {
+            align-self: flex-end;
+            background: var(--accent, #5C62EC);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+        .message.support {
+            align-self: flex-start;
+            background: rgba(92, 98, 236, 0.2);
+            border-bottom-left-radius: 5px;
+            color: var(--text-color);
+        }
+        .message-time {
+            font-size: 0.6rem;
+            margin-top: 3px;
+            opacity: 0.7;
+        }
+        .chat-input-area {
+            padding: 12px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            gap: 10px;
+        }
+        .chat-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 25px;
+            background: rgba(255,255,255,0.1);
+            color: var(--text-color);
+        }
+        .chat-input:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .chat-send {
+            padding: 8px 15px;
+            background: var(--accent, #5C62EC);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+        }
+        .chat-send:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .close-ticket-btn {
+            background: rgba(231, 76, 60, 0.8);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            margin: 8px 12px;
+        }
+        .close-ticket-btn:hover {
+            background: #e74c3c;
+        }
+        .unread-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #e74c3c;
+            color: white;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 20px;
+            min-width: 18px;
+            text-align: center;
+        }
+        
+        .notifications-panel {
+            position: relative;
+            display: inline-block;
+            margin-left: 5px;
+        }
+        .notifications-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 5px 8px;
+            border-radius: 30px;
+            transition: all 0.2s;
+        }
+        .notifications-btn:hover {
+            background: rgba(92, 98, 236, 0.2);
+        }
+        .notifications-badge {
+            position: absolute;
+            top: -3px;
+            right: -2px;
+            background: #e74c3c;
+            color: white;
+            font-size: 0.65rem;
+            padding: 2px 5px;
+            border-radius: 20px;
+            min-width: 16px;
+            text-align: center;
+        }
+        .notifications-dropdown {
+            position: absolute;
+            top: 40px;
+            right: 0;
+            width: 320px;
+            max-height: 400px;
+            background: var(--project-card-bg);
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            z-index: 1000;
+            display: none;
+            overflow: hidden;
+            border: 1px solid var(--accent);
+        }
+        .notifications-dropdown.show {
+            display: block;
+        }
+        .notifications-header {
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .notifications-header h4 {
+            margin: 0;
+            color: var(--accent);
+            font-size: 0.85rem;
+        }
+        .clear-all-btn {
+            background: none;
+            border: none;
+            color: #e74c3c;
+            cursor: pointer;
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            border-radius: 12px;
+        }
+        .clear-all-btn:hover {
+            background: rgba(231, 76, 60, 0.2);
+        }
+        .notifications-list {
+            max-height: 340px;
+            overflow-y: auto;
+        }
+        .notification-item {
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            cursor: pointer;
+        }
+        .notification-item:hover {
+            background: rgba(92, 98, 236, 0.1);
+        }
+        .notification-item.unread {
+            background: rgba(92, 98, 236, 0.15);
+        }
+        .notification-title {
+            font-weight: 600;
+            font-size: 0.8rem;
+            margin-bottom: 3px;
+            color: var(--text-color);
+        }
+        .notification-text {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+        .notification-time {
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+            margin-top: 3px;
+        }
+        .empty-notifications {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+        }
+
+        .social-container {
+            max-width: 1200px;
+            width: 95%;
+            margin: 30px auto;
+            padding: 20px;
+            display: none;
+        }
+        .social-card {
+            background: var(--project-card-bg);
+            border-radius: 30px;
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+            display: flex;
+            height: 600px;
+        }
+        .chats-sidebar {
+            width: 280px;
+            background: rgba(0,0,0,0.2);
+            border-right: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        .chats-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .chats-header h3 {
+            color: white;
+            font-size: 1.2rem;
+        }
+        .chats-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+        .chat-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .chat-item:hover {
+            background: rgba(92, 98, 236, 0.1);
+        }
+        .chat-item.active {
+            background: rgba(92, 98, 236, 0.2);
+            border-left: 3px solid var(--accent);
+        }
+        .chat-item-name {
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 5px;
+        }
+        .chat-item-last {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .main-chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(0,0,0,0.1);
+        }
+        .chat-area-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .chat-area-header h3 {
+            color: white;
+            font-size: 1rem;
+            margin: 0;
+        }
+        .close-chat-btn {
+            background: rgba(231,76,60,0.2);
+            border: none;
+            color: #e74c3c;
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .close-chat-btn:hover {
+            background: #e74c3c;
+            color: white;
+        }
+        .chat-area-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* ПРАВИЛЬНЫЕ СООБЩЕНИЯ */
+        .chat-message {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+        .chat-message.sent {
+            flex-direction: row-reverse;
+        }
+        .message-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+            margin-top: 20px;
+        }
+        .message-wrapper {
+            max-width: 65%;
+            display: flex;
+            flex-direction: column;
+        }
+        .message-sender {
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #9ca3af;
+        }
+        .chat-message.sent .message-sender {
+            text-align: right;
+        }
+        .message-bubble {
+            background: rgba(255,255,255,0.08);
+            border-radius: 18px;
+            padding: 8px 14px;
+            word-wrap: break-word;
+        }
+        .chat-message.sent .message-bubble {
+            background: var(--accent);
+            color: white;
+        }
+        .chat-message.received .message-bubble {
+            background: rgba(92, 98, 236, 0.2);
+            color: var(--text-color);
+        }
+        .message-text {
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+        .message-time {
+            font-size: 0.55rem;
+            margin-top: 5px;
+            opacity: 0.6;
+            text-align: right;
+        }
+        .chat-message-system {
+            align-self: center;
+            background: rgba(255,255,255,0.05);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+
+        .chat-area-input {
+            padding: 15px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            gap: 10px;
+        }
+        .chat-area-input input {
+            flex: 1;
+            padding: 10px 15px;
+            border-radius: 30px;
+            border: 1px solid var(--accent);
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        .chat-area-input button {
+            background: var(--accent);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 30px;
+            color: white;
+            cursor: pointer;
+        }
+        .friends-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .friends-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            gap: 10px;
+        }
+        .friends-header input {
+            flex: 1;
+            padding: 10px 15px;
+            border-radius: 30px;
+            border: 1px solid var(--accent);
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        .friends-header button {
+            background: var(--accent);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 30px;
+            color: white;
+            cursor: pointer;
+        }
+        .friends-list-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        .empty-friends-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            min-height: 300px;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+        .empty-friends-center i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+        .friends-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 15px;
+        }
+        .friend-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .friend-card:hover {
+            background: rgba(92, 98, 236, 0.2);
+            transform: translateY(-3px);
+        }
+        .friend-card-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-size: 2rem;
+        }
+        .friend-card-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+        .search-results {
+            margin: 10px 20px;
+            max-height: 200px;
+            overflow-y: auto;
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            display: none;
+        }
+        .search-result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .search-result-name {
+            font-size: 0.85rem;
+            color: var(--text-color);
+        }
+        .search-result-add {
+            background: var(--accent);
+            border: none;
+            padding: 5px 12px;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.7rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="container">
+            <div class="nav-row">
+                <a href="index.html" class="logo"><strong>Shopify</strong> Game</a>
+                <button class="dark-mode-btn">
+                    <img src="img/icons/sun.svg" alt="Light mode" class="dark-mode-btn__icon">
+                    <img src="img/icons/moon.svg" alt="Dark mode" class="dark-mode-btn__icon">
+                </button>
+                <ul class="nav-list" style="gap: 25px;">
+                    <li class="nav-list__item"><a href="index.html" class="nav-list__link nav-list__link--active" id="mainPageLink">Главная</a></li>
+                    <li class="nav-list__item"><a href="#" class="nav-list__link" id="socialPageLink">Общение</a></li>
+                    <li class="nav-list__item"><a href="leaderboards.html" class="nav-list__link">Рекорды</a></li>
+                    <li class="nav-list__item"><a href="contacts.html" class="nav-list__link">Контакты</a></li>
+                    <li class="nav-list__item admin-only" id="adminLinkItem" style="display: none;"><a href="admin.html" class="nav-list__link">⚙️ Админка</a></li>
+                    <li class="nav-list__item"><div id="user-info"></div></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <script>
+        (function addNotificationsPanel() {
+            const navList = document.querySelector('.nav-list');
+            if (!navList) return;
+            
+            const userInfoLi = document.querySelector('#user-info')?.parentElement;
+            if (!userInfoLi) return;
+            
+            const notificationsLi = document.createElement('li');
+            notificationsLi.className = 'nav-list__item';
+            notificationsLi.style.margin = '0';
+            notificationsLi.style.padding = '0';
+            notificationsLi.innerHTML = `
+                <div class="notifications-panel">
+                    <button class="notifications-btn" id="notificationsBtn">
+                        <i class="fas fa-bell"></i>
+                        <span class="notifications-badge" id="notificationsBadge" style="display: none;">0</span>
+                    </button>
+                    <div class="notifications-dropdown" id="notificationsDropdown">
+                        <div class="notifications-header">
+                            <h4><i class="fas fa-bell"></i> Уведомления</h4>
+                            <button class="clear-all-btn" id="clearAllNotificationsBtn">🗑️ Очистить все</button>
+                        </div>
+                        <div class="notifications-list" id="notificationsList">
+                            <div class="empty-notifications">Нет уведомлений</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            userInfoLi.before(notificationsLi);
+        })();
+    </script>
+    
+    <div class="profile-container" id="profileContainer" style="display: none;">
+        <div class="profile-card">
+            <div class="banner-area">
+                <img id="profileBanner" class="banner-image" src="" onerror="this.style.display='none'">
+                <button type="button" class="banner-edit-btn" id="openBannerBtn"><i class="fas fa-camera"></i> Сменить баннер</button>
+            </div>
+            <div class="profile-info">
+                <div style="position: relative;">
+                    <img id="profileAvatar" class="avatar-large" src="https://cdn-icons-png.flaticon.com/512/149/149071.png">
+                    <button type="button" class="avatar-edit-icon" id="changeAvatarBtn"><i class="fas fa-paint-brush"></i></button>
+                    <input type="file" id="avatarFileInput" accept="image/*" style="display:none">
+                    <input type="file" id="bannerFileInput" accept="image/*" style="display:none">
+                </div>
+                <div class="user-info-details">
+                    <div class="user-name" id="profileUserName">Rick</div>
+                    <div class="user-reg-date" id="profileRegDate">Дата регистрации: загрузка...</div>
+                </div>
+            </div>
+        </div>
+        <div class="stats-row">
+            <div class="stat-box">
+                <div class="stat-label-small">Ваша любимая игра</div>
+                <div class="stat-number favorite-game" id="favoriteGameName">--</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="totalHoursCount">0</div>
+                <div class="stat-label">Общее время в играх в часах</div>
+            </div>
+        </div>
+        <div class="games-section">
+            <div class="section-header"><i class="fas fa-chart-simple"></i> Ваша активность</div>
+            <div class="games-list" id="gamesListContainer"></div>
+        </div>
+    </div>
+
+    <div class="social-container" id="socialContainer">
+        <div class="social-card">
+            <div class="chats-sidebar">
+                <div class="chats-header">
+                    <h3><i class="fas fa-comments"></i> Чаты</h3>
+                </div>
+                <div class="chats-list" id="chatsList"></div>
+            </div>
+            <div class="main-chat-area" id="mainChatArea" style="display: none;">
+                <div class="chat-area-header">
+                    <h3 id="currentChatTitle"><i class="fas fa-globe"></i> Глобальный чат</h3>
+                    <button class="close-chat-btn" id="closeChatAreaBtn"><i class="fas fa-times"></i> Закрыть</button>
+                </div>
+                <div class="chat-area-messages" id="chatAreaMessages">
+                    <div class="chat-message-system">Выберите чат из списка слева</div>
+                </div>
+                <div class="chat-area-input">
+                    <input type="text" id="chatAreaInput" placeholder="Сообщение...">
+                    <button id="chatAreaSendBtn">Отправить</button>
+                </div>
+            </div>
+            <div class="friends-panel" id="friendsPanel">
+                <div class="friends-header">
+                    <input type="text" id="searchFriendInput" placeholder="Поиск по имени...">
+                    <button id="searchBtn"><i class="fas fa-search"></i> Поиск</button>
+                </div>
+                <div class="search-results" id="searchResults"></div>
+                <div class="friends-list-area" id="friendsListArea">
+                    <div class="empty-friends-center">
+                        <i class="fas fa-user-friends"></i>
+                        <p>👥 У вас пока нет друзей</p>
+                        <small>Добавьте друга через поиск выше</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="settings-modal" id="settings-modal">
+        <div class="settings-box">
+            <h2>Настройки аккаунта</h2>
+            <div class="settings-list">
+                <div class="settings-item"><p class="settings-label">Ваше имя</p><h3 class="settings-value" id="settings-name">Rick</h3><input type="text" id="new-name" class="settings-input" placeholder="Сменить ник"></div>
+                <div class="settings-item"><p class="settings-label">Ваша почта</p><h3 class="settings-value" id="settings-email">example@gmail.com</h3><input type="email" id="new-email" class="settings-input" placeholder="Сменить почту"></div>
+                <div class="settings-item password-block"><p class="settings-label">Новый пароль</p><input type="password" id="new-password" class="settings-input" placeholder="Введите новый пароль"></div>
+                <div class="settings-item twofa-item"><p class="settings-label">Двухфакторная аутентификация</p><div id="twofaStatus" class="settings-value">Загрузка...</div><button id="twofaSetupBtn" class="settings-input" style="background: var(--accent); color: white; margin-top: 10px; cursor: pointer;">Настроить 2FA</button></div>
+                <div class="settings-item delete-account-item"><p class="settings-label">Удаление аккаунта</p><button id="deleteAccountBtn" class="settings-input" style="background: #e74c3c; color: white; margin-top: 10px; cursor: pointer;">Удалить аккаунт</button></div>
+            </div>
+            <button class="btn settings-save" id="saveSettingsBtn">Сохранить изменения</button><div id="successMessage" class="success-message">✅ Успешно!</div></div>
+        </div>
+    <div id="confirmDeleteModal" class="settings-modal" style="display: none;">
+        <div class="settings-box" style="max-width: 400px;">
+            <h2 style="color: #ffffff;">⚠️ Удаление аккаунта</h2>
+            <p style="margin: 20px 0; text-align: center;">Вы уверены, что хотите удалить свой аккаунт?<br>Все ваши данные будут удалены.</p>
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <button id="confirmDeleteYes" class="btn" style="background: #e74c3c; color: white;">Удалить</button>
+                <button id="confirmDeleteNo" class="btn" style="background: gray; color: white;">Отмена</button>
+            </div>
+        </div>
+    </div>
+    <div id="banModal" class="settings-modal" style="display: none;">
+        <div class="settings-box" style="max-width: 400px; text-align: center;">
+            <i class="fas fa-ban" style="font-size: 48px; color: #e74c3c; margin-bottom: 20px;"></i>
+            <h2 style="color: #e74c3c;">Аккаунт заблокирован</h2>
+            <p style="margin: 20px 0;">Ваш аккаунт был заблокирован администратором</p>
+            <button id="banLogoutBtn" class="btn" style="background: var(--accent);">Выйти</button>
+        </div>
+    </div>
+    <div id="twofaModal" class="settings-modal" style="display: none;">
+        <div class="settings-box" style="max-width: 450px;">
+            <h2>🔐 Настройка 2FA</h2>
+            <div id="twofaContent">
+                <p>Отсканируйте QR-код в приложении (Google Authenticator, Authy и др.)</p>
+                <div id="qrCodeContainer" style="text-align: center; margin: 20px 0;"></div>
+                <p>Или введите код вручную:</p>
+                <input type="text" id="twofaSecret" class="settings-input" readonly style="text-align: center; font-family: monospace;">
+                <p style="margin-top: 15px;">Введите код из приложения:</p>
+                <input type="text" id="twofaToken" class="settings-input" placeholder="6-значный код">
+                <div id="twofaVerifyMessage" class="success-message" style="margin-top: 10px;"></div>
+                <button id="twofaVerifyBtn" class="btn settings-save" style="margin-top: 15px;">Подтвердить и включить</button>
+            </div>
+            <div id="twofaDisableContent" style="display: none;">
+                <p>Введите код из приложения для отключения 2FA:</p>
+                <input type="text" id="twofaDisableToken" class="settings-input" placeholder="6-значный код">
+                <div id="twofaDisableMessage" class="success-message" style="margin-top: 10px;"></div>
+                <button id="twofaDisableBtn" class="btn settings-save" style="margin-top: 15px; background: #e74c3c;">Отключить 2FA</button>
+            </div>
+            <button class="btn" style="margin-top: 15px; background: gray;" onclick="closeTwofaModal()">Закрыть</button>
+        </div>
+    </div>
+    <header class="header">
+        <div class="header__wrapper">
+            <h1 class="header__title"><strong><em>Shopify</em></strong><br>Добро пожаловать!</h1>
+            <a href="img/SteamSetup.exe" download class="btn">Download</a>
+        </div>
+    </header>
+    <main class="section">
+        <div class="container">
+            <h2 class="title-1">Выбери игру и начни играть!</h2>
+            <ul class="projects">
+                <li class="project"><a href="space-battle.html"><img src="img/projects/space-battle.png" alt="Project img" class="project__img"><h3 class="project__title">Космобой</h3></a></li>
+                <li class="project"><a href="dino.html"><img src="img/projects/dino.png" alt="Динозаврик" class="project__img"><h3 class="project__title">Динозаврик</h3></a></li>
+                <li class="project"><a href="ruletka.html"><img src="img/projects/01.jpg" alt="Колесо фортуны" class="project__img"><h3 class="project__title">Колесо фортуны</h3></a></li>
+                <li class="project"><a href="krestikinoliki.html"><img src="img/projects/02.jpg" alt="Крестики-Нолики" class="project__img"><h3 class="project__title">online Крестики-Нолики</h3></a></li>
+                <li class="project"><a href="snake.html"><img src="img/projects/snake.png" alt="Змейка" class="project__img"><h3 class="project__title">Змейка</h3></a></li>
+                <li class="project"><a href="saper.html"><img src="img/projects/05.jpg" alt="Сапер" class="project__img"><h3 class="project__title">Сапер</h3></a></li>
+                <li class="project"><a href="pacman.html"><img src="img/projects/03.png" alt="Пакмэн" class="project__img"><h3 class="project__title">PAC-MAN</h3></a></li>
+                <li class="project"><a href="airhockey.html"><img src="img/projects/04.png" alt="Аэро-хоккей" class="project__img"><h3 class="project__title">online Аэрохоккей</h3></a></li>
+            </ul>
+        </div>
+    </main>
+    <footer class="footer">
+        <div class="container">
+            <div class="footer__wrapper">
+                <ul class="social">
+                    <li class="social__item"><a href="#!"><img src="img/icons/vk.svg" alt="Link"></a></li>
+                    <li class="social__item"><a href="#!"><img src="img/icons/instagram.svg" alt="Link"></a></li>
+                    <li class="social__item"><a href="#!"><img src="img/icons/twitter.svg" alt="Link"></a></li>
+                    <li class="social__item"><a href="#!"><img src="img/icons/gitHub.svg" alt="Link"></a></li>
+                    <li class="social__item"><a href="#!"><img src="img/icons/linkedIn.svg" alt="Link"></a></li>
+                </ul>
+                <div class="copyright"><p>© 2026 IT.Москва</p></div>
+            </div>
+        </div>
+    </footer>
+
+    <div class="support-chat">
+        <button class="chat-toggle" id="chatToggle">
+            <i class="fas fa-headset"></i>
+            <span class="unread-badge" id="unreadBadge" style="display: none;">0</span>
+        </button>
+        <div class="chat-window" id="chatWindow">
+            <div class="chat-header">
+                <h4><i class="fas fa-headset"></i> Поддержка Shopify Game</h4>
+                <button class="close-chat" id="closeChatBtn"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="chat-categories" id="chatCategories">
+                <div class="chat-category active" data-category="general">💬 Общий вопрос</div>
+                <div class="chat-category" data-category="technical">🔧 Техническая проблема</div>
+                <div class="chat-category" data-category="account">👤 Аккаунт</div>
+                <div class="chat-category" data-category="payment">💰 Оплата</div>
+                <div class="chat-category" data-category="other">❓ Другое</div>
+            </div>
+            <div class="ticket-header">
+                <span class="ticket-number" id="ticketNumber">Тикет #1</span>
+                <span class="ticket-status active" id="ticketStatus">🟢 Активен</span>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="message support">
+                    👋 Здравствуйте! Чем я могу вам помочь?
+                    <div class="message-time">Только что</div>
+                </div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" class="chat-input" id="chatInput" placeholder="Введите сообщение..." maxlength="500">
+                <button class="chat-send" id="chatSendBtn"><i class="fas fa-paper-plane"></i></button>
+            </div>
+            <button class="close-ticket-btn" id="closeTicketBtn">🔒 Закрыть обращение</button>
+        </div>
+    </div>
+
+<script src="./js/main-obf.js"></script>
+<script>
+    let currentUser = null;
+    let profileUser = null;
+    let isProfileVisible = false;
+    let twofaSecret = null;
+    let friends = [];
+    let chats = {
+        'general': []
+    };
+    let currentOpenChat = null;
+    let allUsers = ['Rick', 'Алексей', 'Мария', 'Дмитрий', 'Анна', 'Иван', 'Екатерина', 'Сергей', 'Ольга', 'Максим', 'Владимир', 'Наталья'];
+
+    let notifications = [];
+    
+    function addNotification(title, text, type = 'info') {
+        const notification = {
+            id: Date.now(),
+            title: title,
+            text: text,
+            type: type,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            date: new Date().toLocaleDateString(),
+            read: false,
+            timestamp: Date.now()
+        };
+        notifications.unshift(notification);
+        if (notifications.length > 50) notifications.pop();
+        localStorage.setItem('userNotifications', JSON.stringify(notifications));
+        updateNotificationsUI();
+        if (Notification.permission === 'granted') {
+            new Notification(title, { body: text });
+        }
+    }
+    
+    function updateNotificationsUI() {
+        const badge = document.getElementById('notificationsBadge');
+        const list = document.getElementById('notificationsList');
+        if (!list) return;
+        
+        const unreadCount = notifications.filter(n => !n.read).length;
+        if (badge) {
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+        
+        if (notifications.length === 0) {
+            list.innerHTML = '<div class="empty-notifications">🔔 Нет уведомлений</div>';
+            return;
+        }
+        
+        list.innerHTML = notifications.map(n => `
+            <div class="notification-item ${!n.read ? 'unread' : ''}" data-id="${n.id}" onclick="markNotificationRead(${n.id})">
+                <div class="notification-title">${escapeHtml(n.title)}</div>
+                <div class="notification-text">${escapeHtml(n.text)}</div>
+                <div class="notification-time">${n.date} ${n.time}</div>
+            </div>
+        `).join('');
+    }
+    
+    function markNotificationRead(id) {
+        const notif = notifications.find(n => n.id === id);
+        if (notif) notif.read = true;
+        localStorage.setItem('userNotifications', JSON.stringify(notifications));
+        updateNotificationsUI();
+    }
+    
+    function clearAllNotifications() {
+        notifications = [];
+        localStorage.setItem('userNotifications', JSON.stringify(notifications));
+        updateNotificationsUI();
+    }
+    
+    window.markNotificationRead = markNotificationRead;
+    window.clearAllNotifications = clearAllNotifications;
+
+    function loadFriendsAndChats() {
+        const savedFriends = localStorage.getItem(`friends_${currentUser?.name}`);
+        if (savedFriends) {
+            friends = JSON.parse(savedFriends);
+        } else {
+            friends = [];
+        }
+        
+        const savedChats = localStorage.getItem(`chats_${currentUser?.name}`);
+        if (savedChats) {
+            chats = JSON.parse(savedChats);
+        } else {
+            chats = {
+                'general': [
+                    { id: 1, from: 'Система', text: '👋 Добро пожаловать в общий чат! Общайтесь с другими игроками.', time: new Date().toLocaleTimeString(), date: new Date().toLocaleDateString() }
+                ]
+            };
+        }
+        
+        updateFriendsList();
+        updateChatsList();
+    }
+
+    function saveFriendsAndChats() {
+        if (currentUser) {
+            localStorage.setItem(`friends_${currentUser.name}`, JSON.stringify(friends));
+            localStorage.setItem(`chats_${currentUser.name}`, JSON.stringify(chats));
+        }
+    }
+
+    function addFriend(friendName) {
+        if (!currentUser) return false;
+        if (friendName === currentUser.name) {
+            addNotification('❌', 'Нельзя добавить самого себя');
+            return false;
+        }
+        if (friends.includes(friendName)) {
+            addNotification('❌', `${friendName} уже в друзьях`);
+            return false;
+        }
+        if (!allUsers.includes(friendName) && friendName !== 'Rick') {
+            addNotification('❌', `Игрок ${friendName} не найден`);
+            return false;
+        }
+        
+        friends.push(friendName);
+        if (!chats[friendName]) {
+            chats[friendName] = [];
+        }
+        saveFriendsAndChats();
+        updateFriendsList();
+        updateChatsList();
+        
+        addNotification('👥 Новый друг', `${friendName} теперь в вашем списке друзей!`);
+        return true;
+    }
+
+    function removeFriend(friendName) {
+        friends = friends.filter(f => f !== friendName);
+        saveFriendsAndChats();
+        updateFriendsList();
+        updateChatsList();
+        if (currentOpenChat === friendName) {
+            closeCurrentChat();
+        }
+        addNotification('👤 Друг удалён', `${friendName} удалён из друзей`);
+    }
+
+    function searchUsers() {
+        const searchInput = document.getElementById('searchFriendInput');
+        const query = searchInput.value.trim().toLowerCase();
+        const resultsDiv = document.getElementById('searchResults');
+        
+        if (!query) {
+            resultsDiv.style.display = 'none';
+            resultsDiv.innerHTML = '';
+            return;
+        }
+        
+        const foundUsers = allUsers.filter(u => 
+            u.toLowerCase().includes(query) && 
+            u !== currentUser?.name && 
+            !friends.includes(u)
+        );
+        
+        if (foundUsers.length === 0) {
+            resultsDiv.style.display = 'block';
+            resultsDiv.innerHTML = '<div style="padding:10px;text-align:center;color:#6c86a3;">😕 Ничего не найдено</div>';
+            return;
+        }
+        
+        resultsDiv.style.display = 'block';
+        resultsDiv.innerHTML = foundUsers.map(user => `
+            <div class="search-result-item">
+                <span class="search-result-name"><i class="fas fa-user"></i> ${escapeHtml(user)}</span>
+                <button class="search-result-add" onclick="addFriend('${escapeHtml(user)}')">➕ Добавить</button>
+            </div>
+        `).join('');
+    }
+
+    function updateFriendsList() {
+        const friendsListArea = document.getElementById('friendsListArea');
+        if (!friendsListArea) return;
+        
+        if (friends.length === 0) {
+            friendsListArea.innerHTML = `
+                <div class="empty-friends-center">
+                    <i class="fas fa-user-friends"></i>
+                    <p>👥 У вас пока нет друзей</p>
+                    <small>Добавьте друга через поиск выше</small>
+                </div>
+            `;
+            return;
+        }
+        
+        friendsListArea.innerHTML = `
+            <div class="friends-grid">
+                ${friends.map(friend => `
+                    <div class="friend-card" onclick="openChat('${escapeHtml(friend)}')">
+                        <div class="friend-card-avatar">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                        <div class="friend-card-name">${escapeHtml(friend)}</div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    function updateChatsList() {
+        const chatsList = document.getElementById('chatsList');
+        if (!chatsList) return;
+        
+        let chatItems = [{ name: 'Глобальный чат', id: 'general' }, ...friends.map(f => ({ name: f, id: f }))];
+        
+        chatsList.innerHTML = chatItems.map(chat => {
+            let lastMsg = '';
+            const messages = chats[chat.id] || [];
+            if (messages.length > 0) {
+                lastMsg = messages[messages.length - 1].text.substring(0, 40);
+            } else {
+                lastMsg = 'Нет сообщений';
+            }
+            const isActive = currentOpenChat === chat.id;
+            return `
+                <div class="chat-item ${isActive ? 'active' : ''}" onclick="openChat('${escapeHtml(chat.id)}')">
+                    <div class="chat-item-name"><i class="fas ${chat.id === 'general' ? 'fa-globe' : 'fa-user'}"></i> ${escapeHtml(chat.name)}</div>
+                    <div class="chat-item-last">${escapeHtml(lastMsg)}</div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function getUserAvatar(username) {
+        if (username === currentUser?.name && currentUser?.avatar) {
+            return currentUser.avatar;
+        }
+        const savedUser = localStorage.getItem(`user_avatar_${username}`);
+        if (savedUser) return savedUser;
+        return "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+    }
+
+    function openChat(chatId) {
+        if (!currentUser) {
+            addNotification('Ошибка', 'Войдите в аккаунт');
+            return;
+        }
+        
+        currentOpenChat = chatId;
+        updateChatsList();
+        
+        const mainChatArea = document.getElementById('mainChatArea');
+        const friendsPanel = document.getElementById('friendsPanel');
+        const currentChatTitle = document.getElementById('currentChatTitle');
+        
+        mainChatArea.style.display = 'flex';
+        friendsPanel.style.display = 'none';
+        
+        let chatName = chatId === 'general' ? 'Глобальный чат' : chatId;
+        currentChatTitle.innerHTML = `<i class="fas ${chatId === 'general' ? 'fa-globe' : 'fa-user'}"></i> ${escapeHtml(chatName)}`;
+        
+        if (!chats[chatId]) {
+            chats[chatId] = [];
+        }
+        
+        renderChatMessages(chatId);
+        
+        const input = document.getElementById('chatAreaInput');
+        if (input) {
+            input.focus();
+        }
+    }
+
+    function renderChatMessages(chatId) {
+        const container = document.getElementById('chatAreaMessages');
+        if (!container) return;
+        
+        const messages = chats[chatId] || [];
+        if (messages.length === 0) {
+            container.innerHTML = '<div class="chat-message-system">💬 Напишите первое сообщение</div>';
+            return;
+        }
+        
+        container.innerHTML = messages.map(msg => {
+            if (msg.from === 'Система') {
+                return `<div class="chat-message-system">📢 ${escapeHtml(msg.text)} <span class="message-time">${msg.time} ${msg.date || ''}</span></div>`;
+            }
+            const isSent = msg.from === currentUser?.name;
+            const avatarUrl = getUserAvatar(msg.from);
+            return `
+                <div class="chat-message ${isSent ? 'sent' : 'received'}">
+                    <img class="message-avatar" src="${avatarUrl}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'">
+                    <div class="message-content">
+                        <div class="message-sender">${escapeHtml(msg.from)}</div>
+                        <div class="message-bubble">
+                            <div class="message-text">${escapeHtml(msg.text)}</div>
+                        </div>
+                        <div class="message-time">${msg.time}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function sendMessageToChat() {
+        const input = document.getElementById('chatAreaInput');
+        const text = input?.value.trim();
+        if (!text || !currentOpenChat) return;
+        
+        const now = new Date();
+        const message = {
+            id: Date.now(),
+            from: currentUser?.name,
+            text: text,
+            time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            date: now.toLocaleDateString()
+        };
+        
+        if (!chats[currentOpenChat]) {
+            chats[currentOpenChat] = [];
+        }
+        chats[currentOpenChat].push(message);
+        saveFriendsAndChats();
+        
+        renderChatMessages(currentOpenChat);
+        updateChatsList();
+        input.value = '';
+        
+        if (currentOpenChat !== 'general') {
+            setTimeout(() => {
+                const replyMessage = {
+                    id: Date.now() + 1,
+                    from: currentOpenChat,
+                    text: `✅ "${text.substring(0, 50)}"`,
+                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    date: new Date().toLocaleDateString()
+                };
+                if (chats[currentOpenChat]) {
+                    chats[currentOpenChat].push(replyMessage);
+                    saveFriendsAndChats();
+                    renderChatMessages(currentOpenChat);
+                    updateChatsList();
+                    addNotification(`💬 Сообщение от ${currentOpenChat}`, replyMessage.text);
+                }
+            }, 500);
+        }
+    }
+
+    function closeCurrentChat() {
+        currentOpenChat = null;
+        
+        const mainChatArea = document.getElementById('mainChatArea');
+        const friendsPanel = document.getElementById('friendsPanel');
+        
+        mainChatArea.style.display = 'none';
+        friendsPanel.style.display = 'flex';
+        
+        updateChatsList();
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    let currentTicketId = 1;
+    let ticketMessages = [];
+    let currentCategory = 'general';
+    let unreadCount = 0;
+    let isTicketActive = true;
+    let currentTicketLoaded = false;
+
+    function getNextTicketNumber() {
+        let nextNum = parseInt(localStorage.getItem('nextTicketNumber') || '1');
+        localStorage.setItem('nextTicketNumber', nextNum + 1);
+        return nextNum;
+    }
+
+    function loadLastTicket() {
+        const allTickets = JSON.parse(localStorage.getItem('ticketHistory') || '[]');
+        if (allTickets.length > 0) {
+            const lastTicket = allTickets[allTickets.length - 1];
+            if (!lastTicket.closedAt) {
+                currentTicketId = lastTicket.id;
+                ticketMessages = lastTicket.messages || [];
+                currentCategory = lastTicket.category || 'general';
+                isTicketActive = true;
+                currentTicketLoaded = true;
+                updateUIForActiveTicket();
+                renderTicketMessages();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function updateUIForActiveTicket() {
+        document.getElementById('ticketNumber').textContent = `Тикет #${currentTicketId}`;
+        document.getElementById('ticketStatus').textContent = '🟢 Активен';
+        document.getElementById('ticketStatus').className = 'ticket-status active';
+        document.getElementById('chatInput').disabled = false;
+        document.getElementById('chatSendBtn').disabled = false;
+        document.getElementById('closeTicketBtn').textContent = '🔒 Закрыть обращение';
+        document.getElementById('closeTicketBtn').style.background = 'rgba(231, 76, 60, 0.8)';
+    }
+
+    function saveTicketToHistory() {
+        const allTickets = JSON.parse(localStorage.getItem('ticketHistory') || '[]');
+        const existingIndex = allTickets.findIndex(t => t.id === currentTicketId);
+        const ticketData = {
+            id: currentTicketId,
+            userName: currentUser?.name || 'Гость',
+            userEmail: currentUser?.email || 'unknown',
+            category: currentCategory,
+            messages: [...ticketMessages],
+            closedAt: isTicketActive ? null : new Date().toISOString(),
+            createdAt: new Date().toISOString()
+        };
+        if (existingIndex >= 0) {
+            allTickets[existingIndex] = ticketData;
+        } else {
+            allTickets.push(ticketData);
+        }
+        localStorage.setItem('ticketHistory', JSON.stringify(allTickets));
+    }
+
+    function addTicketMessage(text, isUser = false, isSystem = false) {
+        const message = {
+            id: Date.now(),
+            text: text.trim(),
+            isUser: isUser,
+            isSystem: isSystem,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+        ticketMessages.push(message);
+        renderTicketMessages();
+        saveTicketToHistory();
+        if (!isUser && !isSystem && !document.getElementById('chatWindow').classList.contains('open')) {
+            unreadCount++;
+            updateUnreadBadge();
+        }
+    }
+
+    function renderTicketMessages() {
+        const container = document.getElementById('chatMessages');
+        if (!container) return;
+        if (ticketMessages.length === 0) {
+            container.innerHTML = `<div class="message support">👋 Здравствуйте! Чем я могу вам помочь?<div class="message-time">Только что</div></div>`;
+            return;
+        }
+        container.innerHTML = ticketMessages.map(msg => `
+            <div class="message ${msg.isUser ? 'user' : 'support'}">
+                ${msg.isUser ? (currentUser?.name || 'Пользователь') + ': ' : (msg.isSystem ? '📢 Система: ' : '🎮 Поддержка: ')}${escapeHtml(msg.text)}
+                <div class="message-time">${msg.time}</div>
+            </div>
+        `).join('');
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function createNewTicket() {
+        if (ticketMessages.length > 0 && isTicketActive === false) {
+            saveTicketToHistory();
+        }
+        currentTicketId = getNextTicketNumber();
+        ticketMessages = [];
+        isTicketActive = true;
+        currentTicketLoaded = true;
+        addTicketMessage('👋 Здравствуйте! Чем я могу вам помочь?', false, true);
+        document.getElementById('ticketNumber').textContent = `Тикет #${currentTicketId}`;
+        document.getElementById('ticketStatus').textContent = '🟢 Активен';
+        document.getElementById('ticketStatus').className = 'ticket-status active';
+        document.getElementById('chatInput').disabled = false;
+        document.getElementById('chatSendBtn').disabled = false;
+        document.getElementById('closeTicketBtn').textContent = '🔒 Закрыть обращение';
+        document.getElementById('closeTicketBtn').style.background = 'rgba(231, 76, 60, 0.8)';
+    }
+
+    function closeCurrentTicket() {
+        if (!isTicketActive) return;
+        isTicketActive = false;
+        addTicketMessage(`Тикет #${currentTicketId} закрыт. Спасибо за обращение!`, false, true);
+        document.getElementById('chatInput').disabled = true;
+        document.getElementById('chatSendBtn').disabled = true;
+        document.getElementById('closeTicketBtn').textContent = '➕ Создать новое обращение';
+        document.getElementById('closeTicketBtn').style.background = 'var(--accent)';
+        document.getElementById('ticketStatus').textContent = '🔴 Закрыт';
+        document.getElementById('ticketStatus').className = 'ticket-status closed';
+        saveTicketToHistory();
+    }
+
+    function startNewTicket() {
+        if (isTicketActive) {
+            if (confirm('У вас есть активное обращение. Закрыть его и создать новое?')) {
+                closeCurrentTicket();
+                setTimeout(() => createNewTicket(), 500);
+            }
+        } else {
+            createNewTicket();
+        }
+    }
+
+    function sendTicketMessage() {
+        if (!currentUser) {
+            alert('Войдите в аккаунт, чтобы писать в чат');
+            return;
+        }
+        if (!isTicketActive) {
+            alert('Тикет закрыт');
+            return;
+        }
+        const input = document.getElementById('chatInput');
+        const text = input.value.trim();
+        if (!text) return;
+        addTicketMessage(text, true, false);
+        input.value = '';
+        setTimeout(() => {
+            let reply = '';
+            const lowerText = text.toLowerCase();
+            if (lowerText.includes('игра')) reply = 'У нас есть много интересных игр! 🎮';
+            else if (lowerText.includes('друг')) reply = 'Перейдите в раздел "Общение", чтобы найти друзей! 💬';
+            else reply = 'Спасибо за обращение! Скоро ответим.';
+            addTicketMessage(reply, false, false);
+        }, 500);
+    }
+
+    function updateUnreadBadge() {
+        const badge = document.getElementById('unreadBadge');
+        if (badge) {
+            if (unreadCount > 0 && !document.getElementById('chatWindow').classList.contains('open')) {
+                badge.textContent = unreadCount;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+    }
+
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+
+    function getAuthToken() {
+        let token = localStorage.getItem('authToken');
+        if (!token) token = localStorage.getItem('token');
+        if (!token) token = getCookie('token');
+        return token;
+    }
+
+    const tokenFromCookie = getCookie('token');
+    if (tokenFromCookie) localStorage.setItem('authToken', tokenFromCookie);
+
+    const user = JSON.parse(localStorage.getItem("user"));
+    const userInfo = document.getElementById("user-info");
+
+    function showMessage(elementId, message, isSuccess = true) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.textContent = message;
+            element.style.color = isSuccess ? '#2ecc71' : '#e74c3c';
+            element.classList.add('show');
+            setTimeout(() => element.classList.remove('show'), 3000);
+        }
+    }
+
+    function toggleSocialView() {
+        const socialContainer = document.getElementById("socialContainer");
+        const profileContainer = document.getElementById("profileContainer");
+        const mainTitle = document.querySelector(".title-1");
+        const projectsList = document.querySelector(".projects");
+        const headerSection = document.querySelector(".header");
+        const mainPageLink = document.getElementById("mainPageLink");
+        const socialPageLink = document.getElementById("socialPageLink");
+        
+        socialContainer.style.display = "block";
+        if (profileContainer) profileContainer.style.display = "none";
+        if (mainTitle) mainTitle.style.display = "none";
+        if (projectsList) projectsList.style.display = "none";
+        if (headerSection) headerSection.style.display = "none";
+        
+        if (mainPageLink) mainPageLink.classList.remove("nav-list__link--active");
+        if (socialPageLink) socialPageLink.classList.add("nav-list__link--active");
+        
+        closeCurrentChat();
+    }
+
+    function toggleMainView() {
+        const socialContainer = document.getElementById("socialContainer");
+        const profileContainer = document.getElementById("profileContainer");
+        const mainTitle = document.querySelector(".title-1");
+        const projectsList = document.querySelector(".projects");
+        const headerSection = document.querySelector(".header");
+        const mainPageLink = document.getElementById("mainPageLink");
+        const socialPageLink = document.getElementById("socialPageLink");
+        
+        socialContainer.style.display = "none";
+        if (profileContainer) profileContainer.style.display = "none";
+        if (mainTitle) mainTitle.style.display = "block";
+        if (projectsList) projectsList.style.display = "flex";
+        if (headerSection) headerSection.style.display = "flex";
+        
+        if (mainPageLink) mainPageLink.classList.add("nav-list__link--active");
+        if (socialPageLink) socialPageLink.classList.remove("nav-list__link--active");
+        
+        isProfileVisible = false;
+    }
+
+    if (user) {
+        currentUser = user;
+        profileUser = user;
+        const avatarImg = user.avatar || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+        userInfo.innerHTML = `
+            <div class="profile-menu">
+                <div class="profile-btn" onclick="toggleMenu()">
+                    <img src="${avatarImg}" class="avatar">
+                    <span>${user.name}</span>
+                </div>
+                <div class="dropdown-menu" id="dropdown-menu">
+                    <button onclick="toggleProfileView()">Профиль</button>
+                    <button onclick="openSettings()">Настройки</button>
+                    <button onclick="logout()">Выйти</button>
+                </div>
+            </div>
+        `;
+        if (user.email === 'rickid812@gmail.com') {
+            const adminLink = document.getElementById('adminLinkItem');
+            if (adminLink) adminLink.style.display = 'block';
+        }
+        loadFriendsAndChats();
+    } else {
+        userInfo.innerHTML = `<a href="lgpass.html" class="nav-list__link">Войти</a>`;
+    }
+
+    function logout() {
+        fetch('https://shopify-server-3iuh.onrender.com/logout', { method: 'POST', credentials: 'include' }).catch(() => {});
+        localStorage.removeItem("user");
+        localStorage.removeItem("authToken");
+        window.location.reload();
+    }
+
+    function toggleMenu() {
+        document.getElementById("dropdown-menu")?.classList.toggle("show-menu");
+    }
+
+    async function fetchUserRegistrationDate(email) {
+        const regDateElement = document.getElementById("profileRegDate");
+        if (!regDateElement) return;
+        try {
+            const response = await fetch(`https://shopify-server-3iuh.onrender.com/user/${encodeURIComponent(email)}`, { credentials: 'include' });
+            if (response.ok) {
+                const data = await response.json();
+                const regDate = data.created_at || data.createdAt || data.joined;
+                if (regDate) {
+                    const date = new Date(regDate);
+                    const formattedDate = `${date.getDate().toString().padStart(2,'0')}.${(date.getMonth()+1).toString().padStart(2,'0')}.${date.getFullYear()}`;
+                    regDateElement.textContent = "Дата регистрации: " + formattedDate;
+                    return;
+                }
+            }
+            regDateElement.textContent = "Дата регистрации: не удалось загрузить";
+        } catch (error) {
+            regDateElement.textContent = "Дата регистрации: --";
+        }
+    }
+
+    function openSettings() {
+        document.getElementById("settings-modal").style.display = "flex";
+        if (currentUser) {
+            document.getElementById("settings-name").textContent = currentUser.name;
+            document.getElementById("settings-email").textContent = currentUser.email;
+        }
+        document.getElementById("successMessage").classList.remove("show");
+        loadTwoFAStatus();
+    }
+
+    window.onclick = function(e) {
+        const modal = document.getElementById("settings-modal");
+        if (e.target === modal) modal.style.display = "none";
+        const twofaModal = document.getElementById("twofaModal");
+        if (e.target === twofaModal) twofaModal.style.display = "none";
+        const confirmModal = document.getElementById("confirmDeleteModal");
+        if (e.target === confirmModal) confirmModal.style.display = "none";
+        const chatWindow = document.getElementById('chatWindow');
+        const chatToggle = document.getElementById('chatToggle');
+        if (chatWindow && chatToggle && !chatWindow.contains(e.target) && !chatToggle.contains(e.target) && chatWindow.classList.contains('open')) {
+            chatWindow.classList.remove('open');
+        }
+        const notificationsDropdown = document.getElementById('notificationsDropdown');
+        const notificationsBtn = document.getElementById('notificationsBtn');
+        if (notificationsDropdown && notificationsBtn && !notificationsDropdown.contains(e.target) && !notificationsBtn.contains(e.target) && notificationsDropdown.classList.contains('show')) {
+            notificationsDropdown.classList.remove('show');
+        }
+    }
+
+    async function saveProfile() {
+        const newName = document.getElementById("new-name").value;
+        const newEmail = document.getElementById("new-email").value;
+        const newPassword = document.getElementById("new-password").value;
+        if (!currentUser) return;
+        const token = getAuthToken();
+        if (!token) {
+            showMessage('successMessage', '❌ Токен не найден', false);
+            return;
+        }
+        try {
+            const formData = new FormData();
+            formData.append('name', newName || currentUser.name);
+            formData.append('email', newEmail || currentUser.email);
+            if (newPassword) formData.append('password', newPassword);
+            const response = await fetch('https://shopify-server-3iuh.onrender.com/update-profile', {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData,
+                credentials: 'include'
+            });
+            if (response.ok) {
+                const result = await response.json();
+                const updatedUser = result.user;
+                currentUser.name = updatedUser.name;
+                currentUser.email = updatedUser.email;
+                if (updatedUser.avatar) currentUser.avatar = updatedUser.avatar;
+                if (updatedUser.banner) currentUser.banner = updatedUser.banner;
+                localStorage.setItem("user", JSON.stringify(currentUser));
+                profileUser = currentUser;
+                document.getElementById("settings-name").textContent = currentUser.name;
+                document.getElementById("settings-email").textContent = currentUser.email;
+                const headerName = document.querySelector(".profile-btn span");
+                if (headerName) headerName.textContent = currentUser.name;
+                if (isProfileVisible) {
+                    document.getElementById("profileUserName").textContent = currentUser.name;
+                    if (currentUser.avatar) document.getElementById("profileAvatar").src = currentUser.avatar;
+                    if (currentUser.banner) {
+                        document.getElementById("profileBanner").src = currentUser.banner;
+                        document.getElementById("profileBanner").style.display = 'block';
+                    }
+                    const headerAvatar = document.querySelector(".avatar");
+                    if (headerAvatar && currentUser.avatar) headerAvatar.src = currentUser.avatar;
+                }
+                document.getElementById("new-name").value = "";
+                document.getElementById("new-email").value = "";
+                document.getElementById("new-password").value = "";
+                showMessage('successMessage', '✅ Профиль обновлён!', true);
+            } else {
+                showMessage('successMessage', '❌ Ошибка при сохранении', false);
+            }
+        } catch (error) {
+            showMessage('successMessage', '❌ Ошибка сервера', false);
+        }
+    }
+    document.getElementById("saveSettingsBtn").onclick = saveProfile;
+
+    function toggleProfileView() {
+        const profileContainer = document.getElementById("profileContainer");
+        const socialContainer = document.getElementById("socialContainer");
+        const mainTitle = document.querySelector(".title-1");
+        const projectsList = document.querySelector(".projects");
+        const headerSection = document.querySelector(".header");
+        const mainPageLink = document.getElementById("mainPageLink");
+        const socialPageLink = document.getElementById("socialPageLink");
+        
+        profileContainer.style.display = "block";
+        if (socialContainer) socialContainer.style.display = "none";
+        if (mainTitle) mainTitle.style.display = "none";
+        if (projectsList) projectsList.style.display = "none";
+        if (headerSection) headerSection.style.display = "none";
+        
+        if (mainPageLink) mainPageLink.classList.remove("nav-list__link--active");
+        if (socialPageLink) socialPageLink.classList.remove("nav-list__link--active");
+        
+        isProfileVisible = true;
+        loadProfileData();
+    }
+
+    async function loadProfileData() {
+        profileUser = JSON.parse(localStorage.getItem("user"));
+        if (!profileUser || !profileUser.email) return;
+        document.getElementById("profileUserName").textContent = profileUser.name || "Rick";
+        const avatarImg = profileUser.avatar || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+        document.getElementById("profileAvatar").src = avatarImg;
+        const bannerImg = profileUser.banner;
+        const bannerElement = document.getElementById("profileBanner");
+        if (bannerImg && bannerImg !== 'null' && bannerImg !== '') {
+            bannerElement.src = bannerImg;
+            bannerElement.style.display = 'block';
+        } else {
+            bannerElement.style.display = 'none';
+        }
+        await loadUserRecordsFromDB();
+        updateProfileGameStats();
+        fetchUserRegistrationDate(profileUser.email);
+    }
+
+    async function loadUserRecordsFromDB() {
+        try {
+            let token = getAuthToken();
+            const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+            const response = await fetch('https://shopify-server-3iuh.onrender.com/api/user-records', {
+                credentials: 'include',
+                headers: headers
+            });
+            if (response.ok) {
+                const data = await response.json();
+                if (data.best && Array.isArray(data.best)) {
+                    data.best.forEach(record => {
+                        const gameName = record.gameName;
+                        const bestScore = record._max.score;
+                        if (gameName === 'snake') localStorage.setItem(`snake_best_${profileUser.name}`, bestScore);
+                        else if (gameName === 'saper') {
+                            const existing = JSON.parse(localStorage.getItem(`minesweeper_stats_${profileUser.name}`) || '{}');
+                            existing.wins = bestScore;
+                            localStorage.setItem(`minesweeper_stats_${profileUser.name}`, JSON.stringify(existing));
+                        } else if (gameName === 'pacman') {
+                            const existing = JSON.parse(localStorage.getItem(`pacman_stats_${profileUser.name}`) || '{}');
+                            existing.level = bestScore;
+                            localStorage.setItem(`pacman_stats_${profileUser.name}`, JSON.stringify(existing));
+                        } else if (gameName === 'dino') localStorage.setItem(`dino_best_${profileUser.name}`, bestScore);
+                        else if (gameName === 'space') {
+                            const existing = JSON.parse(localStorage.getItem(`space_battle_${profileUser.name}`) || '{}');
+                            existing.level = bestScore;
+                            localStorage.setItem(`space_battle_${profileUser.name}`, JSON.stringify(existing));
+                        }
+                    });
+                }
+            }
+        } catch (error) {}
+    }
+
+    function updateProfileGameStats() {
+        const gameList = [
+            { id: "space_battle", name: "Космобой", icon: "space-battle.png", url: "space-battle.html", maxLevel: 10 },
+            { id: "dino_best", name: "Динозаврик", icon: "dino.png", url: "dino.html", maxScore: 1000 },
+            { id: "ttt_stats", name: "Крестики-Нолики", icon: "02.jpg", url: "krestikinoliki.html", maxWins: 30 },
+            { id: "minesweeper_stats", name: "Сапёр", icon: "05.jpg", url: "saper.html", maxWins: 30 },
+            { id: "wheel_stats", name: "Колесо Фортуны", icon: "01.jpg", url: "ruletka.html", noStats: true },
+            { id: "pacman_stats", name: "PAC-MAN", icon: "03.png", url: "pacman.html", maxLevel: 20 },
+            { id: "airhockey_stats", name: "Аэрохоккей", icon: "04.png", url: "airhockey.html", maxScore: 1000 },
+            { id: "snake_stats", name: "Змейка", icon: "snake.png", url: "snake.html", maxScore: 1000 }
+        ];
+        
+        function formatTime(minutes) {
+            if (minutes < 60) return `${minutes} мин`;
+            const hours = Math.floor(minutes / 60);
+            const mins = minutes % 60;
+            if (mins === 0) return `${hours} ч`;
+            return `${hours} ч ${mins} мин`;
+        }
+        
+        let totalMinutes = 0;
+        let favoriteGame = { name: "Нет данных", score: -1 };
+        let hasAnyData = false;
+        const container = document.getElementById("gamesListContainer");
+        if (!container) return;
+        container.innerHTML = "";
+        
+        for (let game of gameList) {
+            let statsHtml = "";
+            let progress = 0;
+            let minutes = 0;
+            let score = 0;
+            let hasData = false;
+            
+            if (game.id === "space_battle" && profileUser) {
+                const saved = localStorage.getItem(`space_battle_${profileUser.name}`);
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    const level = data.level || 1;
+                    const wins = data.bossCount || 0;
+                    if (level > 1 || wins > 0) {
+                        statsHtml = `<span>📊 Уровень: ${level}/${game.maxLevel}</span><span>🏆 Побед: ${wins}</span>`;
+                        progress = (level / game.maxLevel) * 100;
+                        minutes = data.playTime || 0;
+                        totalMinutes += minutes;
+                        score = level * 10 + wins;
+                        hasData = true;
+                        if (minutes > 0) statsHtml += `<span>⏱️ Время: ${formatTime(minutes)}</span>`;
+                    }
+                }
+                if (!hasData) statsHtml = `<span>📊 Нет данных</span>`;
+            }
+            else if (game.id === "dino_best" && profileUser) {
+                const scoreVal = parseInt(localStorage.getItem(`dino_best_${profileUser.name}`)) || 0;
+                if (scoreVal > 0) {
+                    statsHtml = `<span>🏆 Рекорд: ${scoreVal}</span>`;
+                    progress = Math.min((scoreVal / game.maxScore) * 100, 100);
+                    minutes = Math.floor(scoreVal * 0.3);
+                    if (minutes < 1) minutes = 1;
+                    totalMinutes += minutes;
+                    score = scoreVal;
+                    hasData = true;
+                    if (minutes > 0) statsHtml += `<span>⏱️ Время: ${formatTime(minutes)}</span>`;
+                }
+                if (!hasData) statsHtml = `<span>🏆 Нет данных</span>`;
+            }
+            else if (game.id === "ttt_stats" && profileUser) {
+                const saved = localStorage.getItem(`ttt_stats_${profileUser.name}`);
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    const wins = data.playerWins || 0;
+                    if (wins > 0) {
+                        statsHtml = `<span>🏆 Побед: ${wins}</span>`;
+                        progress = Math.min((wins / game.maxWins) * 100, 100);
+                        minutes = data.playTime || 0;
+                        totalMinutes += minutes;
+                        score = wins;
+                        hasData = true;
+                        if (minutes > 0) statsHtml += `<span>⏱️ Время: ${formatTime(minutes)}</span>`;
+                    }
+                }
+                if (!hasData) statsHtml = `<span>🏆 Нет данных</span>`;
+            }
+            else if (game.id === "minesweeper_stats" && profileUser) {
+                const saved = localStorage.getItem(`minesweeper_stats_${profileUser.name}`);
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    const wins = data.wins || 0;
+                    if (wins > 0) {
+                        statsHtml = `<span>🏆 Побед: ${wins}</span>`;
+                        progress = Math.min((wins / game.maxWins) * 100, 100);
+                        minutes = data.playTime || 0;
+                        totalMinutes += minutes;
+                        score = wins;
+                        hasData = true;
+                        if (minutes > 0) statsHtml += `<span>⏱️ Время: ${formatTime(minutes)}</span>`;
+                    }
+                }
+                if (!hasData) statsHtml = `<span>🏆 Нет данных</span>`;
+            }
+            else if (game.id === "pacman_stats" && profileUser) {
+                const saved = localStorage.getItem(`pacman_stats_${profileUser.name}`);
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    const level = data.level || 1;
+                    const wins = data.bossCount || 0;
+                    if (level > 1 || wins > 0) {
+                        statsHtml = `<span>📊 Уровень: ${level}/${game.maxLevel}</span><span>🏆 Боссов: ${wins}</span>`;
+                        progress = (level / game.maxLevel) * 100;
+                        minutes = data.playTime || 0;
+                        totalMinutes += minutes;
+                        score = level * 10 + wins;
+                        hasData = true;
+                        if (minutes > 0) statsHtml += `<span>⏱️ Время: ${formatTime(minutes)}</span>`;
+                    }
+                }
+                if (!hasData) statsHtml = `<span>📊 Нет данных</span>`;
+            }
+            else if (game.id === "airhockey_stats" && profileUser) {
+                const saved = localStorage.getItem(`airhockey_stats_${profileUser.name}`);
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    const goals = data.goals || 0;
+                    if (goals > 0) {
+                        statsHtml = `<span>⚽ Голов: ${goals}</span>`;
+                        progress = Math.min((goals / game.maxScore) * 100, 100);
+                        minutes = data.playTime || 0;
+                        totalMinutes += minutes;
+                        score = goals;
+                        hasData = true;
+                        if (minutes > 0) statsHtml += `<span>⏱️ Время: ${formatTime(minutes)}</span>`;
+                    }
+                }
+                if (!hasData) statsHtml = `<span>📊 Нет данных</span>`;
+            }
+            else if (game.id === "snake_stats" && profileUser) {
+                const scoreVal = parseInt(localStorage.getItem(`snake_best_${profileUser.name}`)) || 0;
+                if (scoreVal > 0) {
+                    statsHtml = `<span>🏆 Рекорд: ${scoreVal}</span>`;
+                    progress = Math.min((scoreVal / game.maxScore) * 100, 100);
+                    minutes = Math.floor(scoreVal * 0.5);
+                    if (minutes < 1) minutes = 1;
+                    totalMinutes += minutes;
+                    score = scoreVal;
+                    hasData = true;
+                    if (minutes > 0) statsHtml += `<span>⏱️ Время: ${formatTime(minutes)}</span>`;
+                }
+                if (!hasData) statsHtml = `<span>🏆 Нет данных</span>`;
+            }
+            else if (game.noStats) {
+                statsHtml = `<span>📊 Данные не собираются</span>`;
+                hasData = true;
+            }
+            
+            if (hasData && score > favoriteGame.score && !game.noStats && score > 0) {
+                favoriteGame = { name: game.name, score: score };
+                hasAnyData = true;
+            }
+            
+            const gameRow = document.createElement("div");
+            gameRow.className = "game-row";
+            gameRow.innerHTML = `
+                <div class="game-icon"><img src="img/projects/${game.icon}" onerror="this.src='https://via.placeholder.com/65'"></div>
+                <div class="game-info-block">
+                    <div class="game-title">${game.name}</div>
+                    <div class="game-stats-row">${statsHtml}</div>
+                    <div class="progress-bar-bg"><div class="progress-fill" style="width: ${progress}%"></div></div>
+                </div>
+                <button class="play-game-btn" onclick="window.location.href='${game.url}'"><i class="fas fa-play"></i> Играть</button>
+            `;
+            container.appendChild(gameRow);
+        }
+        
+        document.getElementById("favoriteGameName").textContent = hasAnyData ? favoriteGame.name : "Нет данных";
+        document.getElementById("totalHoursCount").textContent = formatTime(totalMinutes);
+    }
+
+    async function updateAvatar(file) {
+        if (!currentUser) return false;
+        const token = getAuthToken();
+        if (!token) return false;
+        const formData = new FormData();
+        formData.append("avatar", file);
+        try {
+            const response = await fetch("https://shopify-server-3iuh.onrender.com/update-profile", {
+                method: "PUT",
+                credentials: "include",
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            });
+            if (response.ok) {
+                const result = await response.json();
+                if (result.user) {
+                    currentUser = result.user;
+                    profileUser = result.user;
+                    localStorage.setItem("user", JSON.stringify(currentUser));
+                    document.getElementById("profileAvatar").src = result.user.avatar || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+                    const headerAvatar = document.querySelector(".avatar");
+                    if (headerAvatar) headerAvatar.src = result.user.avatar || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+                    showMessage('successMessage', '✅ Аватар обновлён!', true);
+                    return true;
+                }
+            }
+        } catch (error) {}
+        return false;
+    }
+
+    async function updateBanner(file) {
+        if (!currentUser) return false;
+        const token = getAuthToken();
+        if (!token) return false;
+        const formData = new FormData();
+        formData.append("banner", file);
+        try {
+            const response = await fetch("https://shopify-server-3iuh.onrender.com/update-profile", {
+                method: "PUT",
+                credentials: "include",
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            });
+            if (response.ok) {
+                const result = await response.json();
+                if (result.user) {
+                    currentUser = result.user;
+                    profileUser = result.user;
+                    localStorage.setItem("user", JSON.stringify(currentUser));
+                    const profileBanner = document.getElementById("profileBanner");
+                    if (profileBanner && result.user.banner) {
+                        profileBanner.src = result.user.banner;
+                        profileBanner.style.display = 'block';
+                    }
+                    showMessage('successMessage', '✅ Баннер обновлён!', true);
+                    return true;
+                }
+            }
+        } catch (error) {}
+        return false;
+    }
+
+    async function loadTwoFAStatus() {
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (!user || !user.email) {
+            const statusDiv = document.getElementById('twofaStatus');
+            if (statusDiv) statusDiv.textContent = '❌ Войдите в аккаунт';
+            return;
+        }
+        try {
+            const response = await fetch(`https://shopify-server-3iuh.onrender.com/user/${encodeURIComponent(user.email)}`, { credentials: 'include' });
+            if (response.ok) {
+                const data = await response.json();
+                const twofaEnabled = data.twoFactorEnabled === true;
+                const statusDiv = document.getElementById('twofaStatus');
+                if (statusDiv) {
+                    statusDiv.textContent = twofaEnabled ? '✅ Включена' : '❌ Отключена';
+                    statusDiv.style.color = twofaEnabled ? '#2ecc71' : '#e74c3c';
+                }
+                window.twofaEnabled = twofaEnabled;
+            }
+        } catch (error) {}
+    }
+
+    async function setupTwoFA() {
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (!user || !user.id) {
+            showMessage('successMessage', '❌ Войдите в аккаунт', false);
+            return;
+        }
+        try {
+            const response = await fetch('https://shopify-server-3iuh.onrender.com/api/2fa/setup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ userId: user.id })
+            });
+            if (response.ok) {
+                const data = await response.json();
+                twofaSecret = data.secret;
+                const qrContainer = document.getElementById('qrCodeContainer');
+                if (qrContainer) qrContainer.innerHTML = `<img src="${data.qrCode}" style="width: 200px; height: 200px; border-radius: 10px;">`;
+                const secretInput = document.getElementById('twofaSecret');
+                if (secretInput) secretInput.value = twofaSecret;
+                document.getElementById('twofaContent').style.display = 'block';
+                document.getElementById('twofaDisableContent').style.display = 'none';
+                document.getElementById('twofaModal').style.display = 'flex';
+            } else {
+                showMessage('successMessage', '❌ Ошибка настройки 2FA', false);
+            }
+        } catch (error) {
+            showMessage('successMessage', '❌ Ошибка сервера', false);
+        }
+    }
+
+    async function verifyAndEnableTwoFA() {
+        const token = document.getElementById('twofaToken').value;
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (!token || token.length !== 6) {
+            showMessage('twofaVerifyMessage', '❌ Введите 6-значный код', false);
+            return;
+        }
+        try {
+            const response = await fetch('https://shopify-server-3iuh.onrender.com/api/2fa/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ token: token, userId: user.id })
+            });
+            if (response.ok) {
+                showMessage('twofaVerifyMessage', '✅ 2FA включена!', true);
+                setTimeout(() => closeTwofaModal(), 1500);
+                await loadTwoFAStatus();
+                document.getElementById('twofaToken').value = '';
+            } else {
+                showMessage('twofaVerifyMessage', '❌ Неверный код', false);
+            }
+        } catch (error) {
+            showMessage('twofaVerifyMessage', '❌ Ошибка сервера', false);
+        }
+    }
+
+    async function disableTwoFA() {
+        const token = document.getElementById('twofaDisableToken').value;
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (!token || token.length !== 6) {
+            showMessage('twofaDisableMessage', '❌ Введите 6-значный код', false);
+            return;
+        }
+        try {
+            const response = await fetch('https://shopify-server-3iuh.onrender.com/api/2fa/disable', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ token: token, userId: user.id })
+            });
+            if (response.ok) {
+                showMessage('twofaDisableMessage', '✅ 2FA отключена', true);
+                setTimeout(() => closeTwofaModal(), 1500);
+                await loadTwoFAStatus();
+                document.getElementById('twofaDisableToken').value = '';
+            } else {
+                showMessage('twofaDisableMessage', '❌ Неверный код', false);
+            }
+        } catch (error) {
+            showMessage('twofaDisableMessage', '❌ Ошибка сервера', false);
+        }
+    }
+
+    function openTwoFASettings() {
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (!user) {
+            showMessage('successMessage', '❌ Войдите в аккаунт', false);
+            return;
+        }
+        if (window.twofaEnabled === true) {
+            document.getElementById('twofaContent').style.display = 'none';
+            document.getElementById('twofaDisableContent').style.display = 'block';
+            document.getElementById('twofaModal').style.display = 'flex';
+        } else {
+            setupTwoFA();
+        }
+    }
+
+    function closeTwofaModal() {
+        document.getElementById('twofaModal').style.display = 'none';
+        document.getElementById('twofaToken').value = '';
+        document.getElementById('twofaDisableToken').value = '';
+        twofaSecret = null;
+    }
+
+    async function checkBanStatus() {
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (!user || !user.id) return;
+        try {
+            const response = await fetch(`https://shopify-server-3iuh.onrender.com/api/check-ban/${user.id}`, { credentials: 'include' });
+            if (response.ok) {
+                const data = await response.json();
+                if (data.isBanned) {
+                    document.getElementById('banModal').style.display = 'flex';
+                }
+            }
+        } catch (error) {}
+    }
+
+    async function deleteAccount() {
+        try {
+            const token = getAuthToken();
+            const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+            const response = await fetch('https://shopify-server-3iuh.onrender.com/api/delete-account', {
+                method: 'POST',
+                credentials: 'include',
+                headers: headers
+            });
+            if (response.ok) {
+                showMessage('successMessage', '✅ Аккаунт удалён', true);
+                localStorage.removeItem("user");
+                localStorage.removeItem("authToken");
+                setTimeout(() => { window.location.href = 'lgpass.html'; }, 1500);
+            } else {
+                showMessage('successMessage', '❌ Ошибка при удалении', false);
+            }
+        } catch (error) {
+            showMessage('successMessage', '❌ Ошибка сервера', false);
+        }
+    }
+
+    const changeAvatarBtn = document.getElementById('changeAvatarBtn');
+    const openBannerBtn = document.getElementById('openBannerBtn');
+    const avatarInput = document.getElementById('avatarFileInput');
+    const bannerInput = document.getElementById('bannerFileInput');
+
+    if (changeAvatarBtn) {
+        changeAvatarBtn.onclick = function() { avatarInput.click(); };
+    }
+    if (openBannerBtn) {
+        openBannerBtn.onclick = function() { bannerInput.click(); };
+    }
+    if (avatarInput) {
+        avatarInput.onchange = function() {
+            const file = this.files[0];
+            if (file) { updateAvatar(file).then(() => { this.value = ''; }); }
+        };
+    }
+    if (bannerInput) {
+        bannerInput.onchange = function() {
+            const file = this.files[0];
+            if (file) { updateBanner(file).then(() => { this.value = ''; }); }
+        };
+    }
+
+    document.getElementById('deleteAccountBtn')?.addEventListener('click', () => {
+        document.getElementById('confirmDeleteModal').style.display = 'flex';
+    });
+    document.getElementById('confirmDeleteYes')?.addEventListener('click', () => {
+        document.getElementById('confirmDeleteModal').style.display = 'none';
+        deleteAccount();
+    });
+    document.getElementById('confirmDeleteNo')?.addEventListener('click', () => {
+        document.getElementById('confirmDeleteModal').style.display = 'none';
+    });
+    document.getElementById('banLogoutBtn')?.addEventListener('click', () => {
+        localStorage.removeItem("user");
+        localStorage.removeItem("authToken");
+        window.location.href = 'lgpass.html';
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        notifications = [];
+        localStorage.setItem('userNotifications', JSON.stringify(notifications));
+        updateNotificationsUI();
+        
+        const mainPageLink = document.getElementById('mainPageLink');
+        const socialPageLink = document.getElementById('socialPageLink');
+        
+        if (mainPageLink) {
+            mainPageLink.onclick = function(e) {
+                e.preventDefault();
+                toggleMainView();
+            };
+        }
+        if (socialPageLink) {
+            socialPageLink.onclick = function(e) {
+                e.preventDefault();
+                toggleSocialView();
+            };
+        }
+        
+        const chatToggle = document.getElementById('chatToggle');
+        const chatWindow = document.getElementById('chatWindow');
+        const closeChatBtn = document.getElementById('closeChatBtn');
+        const chatSendBtn = document.getElementById('chatSendBtn');
+        const chatInput = document.getElementById('chatInput');
+        const closeTicketBtn = document.getElementById('closeTicketBtn');
+        const categoryBtns = document.querySelectorAll('.chat-category');
+        
+        const loaded = loadLastTicket();
+        if (!loaded) { createNewTicket(); } else { renderTicketMessages(); }
+        
+        const notificationsBtn = document.getElementById('notificationsBtn');
+        const notificationsDropdown = document.getElementById('notificationsDropdown');
+        if (notificationsBtn && notificationsDropdown) {
+            notificationsBtn.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                notificationsDropdown.classList.toggle('show');
+                return false;
+            };
+        }
+        
+        const clearAllBtn = document.getElementById('clearAllNotificationsBtn');
+        if (clearAllBtn) {
+            clearAllBtn.onclick = function(e) {
+                e.preventDefault();
+                clearAllNotifications();
+                return false;
+            };
+        }
+        
+        const searchBtn = document.getElementById('searchBtn');
+        const searchInput = document.getElementById('searchFriendInput');
+        if (searchBtn && searchInput) {
+            searchBtn.onclick = function() { searchUsers(); };
+            searchInput.onkeypress = function(e) {
+                if (e.key === 'Enter') { searchUsers(); }
+            };
+        }
+        
+        const closeChatAreaBtn = document.getElementById('closeChatAreaBtn');
+        if (closeChatAreaBtn) {
+            closeChatAreaBtn.onclick = function() { closeCurrentChat(); };
+        }
+        
+        const chatAreaSendBtn = document.getElementById('chatAreaSendBtn');
+        const chatAreaInput = document.getElementById('chatAreaInput');
+        if (chatAreaSendBtn && chatAreaInput) {
+            chatAreaSendBtn.onclick = function() { sendMessageToChat(); };
+            chatAreaInput.onkeypress = function(e) {
+                if (e.key === 'Enter') { sendMessageToChat(); }
+            };
+        }
+        
+        if (chatToggle) {
+            chatToggle.onclick = function(e) {
+                e.preventDefault();
+                chatWindow.classList.toggle('open');
+                if (chatWindow.classList.contains('open')) { unreadCount = 0; updateUnreadBadge(); }
+                return false;
+            };
+        }
+        if (closeChatBtn) {
+            closeChatBtn.onclick = function(e) { e.preventDefault(); chatWindow.classList.remove('open'); return false; };
+        }
+        if (chatSendBtn) {
+            chatSendBtn.onclick = function(e) { e.preventDefault(); sendTicketMessage(); return false; };
+        }
+        if (chatInput) {
+            chatInput.onkeypress = function(e) { if (e.key === 'Enter') { e.preventDefault(); sendTicketMessage(); return false; } };
+        }
+        if (closeTicketBtn) {
+            closeTicketBtn.onclick = function(e) {
+                e.preventDefault();
+                if (isTicketActive) { closeCurrentTicket(); } else { startNewTicket(); }
+                return false;
+            };
+        }
+        categoryBtns.forEach(btn => {
+            btn.onclick = function(e) {
+                e.preventDefault();
+                categoryBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentCategory = this.dataset.category;
+                if (!isTicketActive) { startNewTicket(); }
+            };
+        });
+        
+        const setupBtn = document.getElementById('twofaSetupBtn');
+        if (setupBtn) setupBtn.addEventListener('click', openTwoFASettings);
+        const verifyBtn = document.getElementById('twofaVerifyBtn');
+        if (verifyBtn) verifyBtn.addEventListener('click', verifyAndEnableTwoFA);
+        const disableBtn = document.getElementById('twofaDisableBtn');
+        if (disableBtn) disableBtn.addEventListener('click', disableTwoFA);
+        if (document.getElementById('twofaStatus')) loadTwoFAStatus();
+        checkBanStatus();
+        
+        if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+            Notification.requestPermission();
+        }
+        
+        toggleMainView();
+    });
+
+    loadTwoFAStatus();
+    
+    window.openChat = openChat;
+    window.addFriend = addFriend;
+    window.removeFriend = removeFriend;
+    window.searchUsers = searchUsers;
+    window.closeCurrentChat = closeCurrentChat;
+    window.sendMessageToChat = sendMessageToChat;
+</script>
+</body>
+</html>

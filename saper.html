@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Сапёр</title>
+    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="game.css">
+    <script src="js/saveScore.js"></script>
+</head>
+<body>
+    <nav class="nav">
+        <div class="container">
+            <div class="nav-row">
+                <a href="index.html" class="logo"><strong>Shopify</strong> Game</a>
+                <button class="dark-mode-btn">
+                    <img src="img/icons/sun.svg" alt="Light mode" class="dark-mode-btn__icon">
+                    <img src="img/icons/moon.svg" alt="Dark mode" class="dark-mode-btn__icon">
+                </button>
+                <ul class="nav-list">
+                    <li class="nav-list__item"><a href="index.html" class="nav-list__link">Главная</a></li>
+                    <li class="nav-list__item"><a href="contacts.html" class="nav-list__link">Контакты</a></li>
+                    <li class="nav-list__item"><div id="user-info"></div></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="section">
+        <div class="container">
+            <div class="project-details">
+                <div class="minesweeper-wrapper">
+                    <div class="minesweeper-container">
+                        <div class="game-header">
+                            <div class="game-title">Сапёр</div>
+                        </div>
+                        
+                        <div class="difficulty-buttons">
+                            <button class="difficulty-btn active" data-diff="easy">9x9</button>
+                            <button class="difficulty-btn" data-diff="medium">12x12</button>
+                            <button class="difficulty-btn" data-diff="hard">16x16</button>
+                        </div>
+                        
+                        <div id="board" class="board"></div>
+                        
+                        <div class="controls">
+                            <button class="game-btn" id="newGameBtn">Новая игра</button>
+                        </div>
+                        
+                        <div class="status" id="status">Нажми на клетку</div>
+                    </div>
+                    
+                    <div class="minesweeper-sidebar">
+                        <div class="instructions">
+                            <h3>Подсказка по управлению</h3>
+                            <p>🖱️ ЛКМ — открыть клетку</p>
+                            <p>🚩 ПКМ — поставить флаг</p>
+                        </div>
+                        
+                        <div class="flags-counter">
+                            <h3>🚩 Ваши флажки</h3>
+                            <div class="flags-count" id="flagsCount">0</div>
+                            <div class="flags-total" id="flagsTotal">/ 0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer__wrapper">
+                <ul class="social">
+                    <li class="social__item"><a href="#!"><img src="img/icons/vk.svg" alt="Link"></a></li>
+                    <li class="social__item"><a href="#!"><img src="img/icons/instagram.svg" alt="Link"></a></li>
+                    <li class="social__item"><a href="#!"><img src="img/icons/twitter.svg" alt="Link"></a></li>
+                    <li class="social__item"><a href="#!"><img src="img/icons/gitHub.svg" alt="Link"></a></li>
+                    <li class="social__item"><a href="#!"><img src="img/icons/linkedIn.svg" alt="Link"></a></li>
+                </ul>
+                <div class="copyright">
+                    <p>© 2026 IT.Москва</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <script src="js/main-obf.js"></script>
+    <script>
+        const user = JSON.parse(localStorage.getItem("user"));
+        const userInfo = document.getElementById("user-info");
+
+        if (user) {
+            const avatarUrl = user.avatar || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+            userInfo.innerHTML = `
+                <div class="profile-menu">
+                    <div class="profile-btn" onclick="toggleMenu()">
+                        <img src="${avatarUrl}" class="avatar">
+                        <span>${user.name}</span>
+                    </div>
+                    <div class="dropdown-menu" id="dropdown-menu">
+                        <button onclick="logout()">Выйти</button>
+                    </div>
+                </div>
+            `;
+        } else {
+            userInfo.innerHTML = `<a href="lgpass.html" class="nav-list__link">Войти</a>`;
+        }
+
+        function logout() {
+            localStorage.removeItem("user");
+            window.location.href = 'lgpass.html';
+        }
+
+        function toggleMenu() {
+            document.getElementById("dropdown-menu")?.classList.toggle("show-menu");
+        }
+
+        (function() {
+            const userCheck = JSON.parse(localStorage.getItem("user"));
+            if (!userCheck || !userCheck.email) {
+                window.location.href = 'lgpass.html';
+                return;
+            }
+        })();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            let currentSize = 9;
+            let currentMines = 15;
+            let currentDifficulty = 'easy';
+            
+            const difficulties = {
+                easy: { size: 9, mines: 15, next: 'medium', name: '9x9' },
+                medium: { size: 12, mines: 30, next: 'hard', name: '12x12' },
+                hard: { size: 16, mines: 50, next: null, name: '16x16' }
+            };
+            
+            let board = [];
+            let revealed = [];
+            let flags = [];
+            let gameActive = true;
+            let firstMove = true;
+            
+            const boardElement = document.getElementById('board');
+            const statusElement = document.getElementById('status');
+            const newGameBtn = document.getElementById('newGameBtn');
+            const diffBtns = document.querySelectorAll('.difficulty-btn');
+            const flagsCountSpan = document.getElementById('flagsCount');
+            const flagsTotalSpan = document.getElementById('flagsTotal');
+            
+            function updateFlagsCounter() {
+                let flagsUsed = 0;
+                for (let i = 0; i < currentSize; i++) {
+                    for (let j = 0; j < currentSize; j++) {
+                        if (flags[i][j]) flagsUsed++;
+                    }
+                }
+                flagsCountSpan.textContent = flagsUsed;
+                flagsTotalSpan.textContent = `/ ${currentMines}`;
+            }
+            
+            function initBoard() {
+                board = Array(currentSize).fill().map(() => Array(currentSize).fill(0));
+                revealed = Array(currentSize).fill().map(() => Array(currentSize).fill(false));
+                flags = Array(currentSize).fill().map(() => Array(currentSize).fill(false));
+                gameActive = true;
+                firstMove = true;
+                statusElement.textContent = 'Нажми на клетку';
+                statusElement.style.color = '';
+                updateFlagsCounter();
+                renderBoard();
+            }
+            
+            function placeMines(firstRow, firstCol) {
+                let minesPlaced = 0;
+                while (minesPlaced < currentMines) {
+                    const row = Math.floor(Math.random() * currentSize);
+                    const col = Math.floor(Math.random() * currentSize);
+                    if ((row === firstRow && col === firstCol)) continue;
+                    if (board[row][col] !== -1) {
+                        board[row][col] = -1;
+                        minesPlaced++;
+                    }
+                }
+                
+                for (let i = 0; i < currentSize; i++) {
+                    for (let j = 0; j < currentSize; j++) {
+                        if (board[i][j] !== -1) {
+                            let count = 0;
+                            for (let di = -1; di <= 1; di++) {
+                                for (let dj = -1; dj <= 1; dj++) {
+                                    const ni = i + di, nj = j + dj;
+                                    if (ni >= 0 && ni < currentSize && nj >= 0 && nj < currentSize && board[ni][nj] === -1) {
+                                        count++;
+                                    }
+                                }
+                            }
+                            board[i][j] = count;
+                        }
+                    }
+                }
+            }
+            
+            function upgradeDifficulty() {
+                const nextDiff = difficulties[currentDifficulty].next;
+                if (!nextDiff) {
+                    statusElement.textContent = 'Победа!';
+                    statusElement.style.color = '#ffcc00';
+                    saveGameResult('saper', playerScore);
+                    return false;
+                }
+                
+                currentDifficulty = nextDiff;
+                currentSize = difficulties[currentDifficulty].size;
+                currentMines = difficulties[currentDifficulty].mines;
+                
+                diffBtns.forEach(btn => {
+                    if (btn.dataset.diff === currentDifficulty) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                });
+                
+                statusElement.textContent = `Переходим на поле по сложнее! ${difficulties[currentDifficulty].name}`;
+                statusElement.style.color = '#ffcc00';
+                
+                initBoard();
+                return true;
+            }
+            
+            function revealCell(row, col) {
+                if (!gameActive) return;
+                if (revealed[row][col]) return;
+                if (flags[row][col]) return;
+                
+                if (firstMove) {
+                    placeMines(row, col);
+                    firstMove = false;
+                }
+                
+                if (board[row][col] === -1) {
+                    revealed[row][col] = true;
+                    gameActive = false;
+                    statusElement.textContent = 'ВЫ ПРОИГРАЛИ!';
+                    statusElement.style.color = '#ff416c';
+                    revealAllMines();
+                    renderBoard();
+                    return;
+                }
+                
+                revealCellRecursive(row, col);
+                
+                if (checkWin()) {
+                    gameActive = false;
+                    statusElement.textContent = 'Победа!';
+                    statusElement.style.color = '#4caf50';
+                    renderBoard();
+                    
+                    setTimeout(() => {
+                        upgradeDifficulty();
+                    }, 1500);
+                    return;
+                }
+                
+                renderBoard();
+            }
+            
+            function revealCellRecursive(row, col) {
+                if (row < 0 || row >= currentSize || col < 0 || col >= currentSize) return;
+                if (revealed[row][col]) return;
+                if (flags[row][col]) return;
+                if (board[row][col] === -1) return;
+                
+                revealed[row][col] = true;
+                
+                if (board[row][col] === 0) {
+                    for (let di = -1; di <= 1; di++) {
+                        for (let dj = -1; dj <= 1; dj++) {
+                            revealCellRecursive(row + di, col + dj);
+                        }
+                    }
+                }
+            }
+            
+            function toggleFlag(row, col, event) {
+                event.preventDefault();
+                if (!gameActive) return;
+                if (revealed[row][col]) return;
+                
+                flags[row][col] = !flags[row][col];
+                updateFlagsCounter();
+                renderBoard();
+                
+                if (checkWin()) {
+                    gameActive = false;
+                    statusElement.textContent = 'Победа!';
+                    statusElement.style.color = '#4caf50';
+                    renderBoard();
+                    
+                    setTimeout(() => {
+                        upgradeDifficulty();
+                    }, 1500);
+                }
+            }
+            
+            function checkWin() {
+                for (let i = 0; i < currentSize; i++) {
+                    for (let j = 0; j < currentSize; j++) {
+                        if (board[i][j] !== -1 && !revealed[i][j]) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+            
+            function revealAllMines() {
+                for (let i = 0; i < currentSize; i++) {
+                    for (let j = 0; j < currentSize; j++) {
+                        if (board[i][j] === -1) {
+                            revealed[i][j] = true;
+                        }
+                    }
+                }
+            }
+            
+            function renderBoard() {
+                boardElement.innerHTML = '';
+                boardElement.style.gridTemplateColumns = `repeat(${currentSize}, 1fr)`;
+                
+                for (let i = 0; i < currentSize; i++) {
+                    for (let j = 0; j < currentSize; j++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'cell';
+                        
+                        if (revealed[i][j]) {
+                            cell.classList.add('revealed');
+                            if (board[i][j] === -1) {
+                                cell.classList.add('mine');
+                            } else if (board[i][j] > 0) {
+                                cell.textContent = board[i][j];
+                                cell.setAttribute('data-value', board[i][j]);
+                            }
+                        } else if (flags[i][j]) {
+                            cell.classList.add('flagged');
+                        }
+                        
+                        cell.addEventListener('click', (function(row, col) {
+                            return function() { revealCell(row, col); };
+                        })(i, j));
+                        
+                        cell.addEventListener('contextmenu', (function(row, col) {
+                            return function(e) { toggleFlag(row, col, e); };
+                        })(i, j));
+                        
+                        boardElement.appendChild(cell);
+                    }
+                }
+            }
+            
+            function newGame() {
+                initBoard();
+            }
+            
+            function setDifficulty(diff) {
+                currentDifficulty = diff;
+                const config = difficulties[diff];
+                currentSize = config.size;
+                currentMines = config.mines;
+                
+                diffBtns.forEach(btn => {
+                    if (btn.dataset.diff === diff) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                });
+                
+                initBoard();
+            }
+            
+            diffBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    setDifficulty(btn.dataset.diff);
+                });
+            });
+            
+            newGameBtn.addEventListener('click', newGame);
+            
+            initBoard();
+        });
+    </script>
+</body>
+</html>

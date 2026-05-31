@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Динозаврик</title>
+    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="game.css">
+    <script src="js/saveScore.js"></script>
+</head>
+<body>
+    <nav class="nav">
+        <div class="container">
+            <div class="nav-row">
+                <a href="index.html" class="logo"><strong>Shopify</strong> Game</a>
+                <button class="dark-mode-btn">
+                    <img src="img/icons/sun.svg" alt="Light mode" class="dark-mode-btn__icon">
+                    <img src="img/icons/moon.svg" alt="Dark mode" class="dark-mode-btn__icon">
+                </button>
+                <ul class="nav-list">
+                    <li class="nav-list__item"><a href="index.html" class="nav-list__link">Главная</a></li>
+                    <li class="nav-list__item"><a href="contacts.html" class="nav-list__link">Контакты</a></li>
+                    <li class="nav-list__item"><div id="user-info"></div></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <section class="game-section">
+        <div class="game-container-custom">
+            <div id="game-content"></div>
+        </div>
+    </section>
+    <footer class="footer">
+        <div class="container">
+            <div class="footer__wrapper">
+                <ul class="social">
+                    <li class="social__item"><a href="#!"><img src="img/icons/vk.svg" alt="Link"></a></li>
+                    <li class="social__item"><a href="#!"><img src="img/icons/instagram.svg" alt="Link"></a></li>
+                    <li class="social__item"><a href="#!"><img src="img/icons/twitter.svg" alt="Link"></a></li>
+                    <li class="social__item"><a href="#!"><img src="img/icons/gitHub.svg" alt="Link"></a></li>
+                    <li class="social__item"><a href="#!"><img src="img/icons/linkedIn.svg" alt="Link"></a></li>
+                </ul>
+                <div class="copyright">
+                    <p>© 2026 IT.Москва</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <script src="js/main-obf.js"></script>
+    <script>
+        let dinoGame = null;
+
+        function logout() { 
+            localStorage.removeItem("user"); 
+            window.location.href = 'lgpass.html'; 
+        }
+
+        function toggleMenu() { 
+            const menu = document.getElementById("dropdown-menu"); 
+            if (menu) menu.classList.toggle("show-menu"); 
+        }
+
+        function escapeHtml(str) { 
+            if (!str) return ''; 
+            return str.replace(/[&<>]/g, function(m) { 
+                if (m === '&') return '&amp;'; 
+                if (m === '<') return '&lt;'; 
+                if (m === '>') return '&gt;'; 
+                return m; 
+            }); 
+        }
+
+        class DinoRunnerGame {
+            constructor(canvas, ctx, hudElements) {
+                this.canvas = canvas;
+                this.ctx = ctx;
+                this.hud = hudElements;
+                this.resizeCanvas();
+                this.lastUpdate = 0;
+                
+                this.jumpSound = new Audio('assets/jump.mp3');
+                this.jumpSound.volume = 0.6;
+                this.jumpSound.load();
+                
+                this.downSound = new Audio('assets/down.mp3');
+                this.downSound.volume = 0.5;
+                this.winSound = new Audio('assets/win.mp3');
+                this.winSound.volume = 0.5;
+                this.loseSound = new Audio('assets/lose.mp3');
+                this.loseSound.volume = 0.5;
+                
+                this.groundY = this.height - 58;
+                
+                this.isDucking = false;
+                this.standHeight = 48;
+                this.duckHeight = 32;
+                
+                this.dino = {
+                    x: 80,
+                    y: this.groundY - 48,
+                    width: 44,
+                    height: 48,
+                    yVelocity: 0,
+                    isJumping: false,
+                    gravity: 0.85,
+                    jumpPower: -11.5
+                };
+                
+                this.obstacles = [];
+                this.obstacleTimer = 0;
+                this.baseObstacleDelay = 75;
+                this.currentSpeed = 0;
+                this.targetSpeed = 4.5;
+                this.maxSpeed = 12;
+                this.speedIncreaseStep = 0.006;
+                this.score = 0;
+                this.bestScore = this.loadBestScore();
+                this.gameOverFlag = false;
+                this.gameStarted = false;
+                this.waitingForStart = true;
+                this.cactusGroupCounter = 0;
+                this.cactusGroupSize = 1;
+                
+                this.dinoStandImg = new Image();
+                this.dinoStandImg.src = 'assets/dino.png';
+                this.dinoDuckImg = new Image();
+                this.dinoDuckImg.src = 'assets/dino-duck.png';
+                this.ravenImg = new Image();
+                this.ravenImg.src = 'assets/raven.png';
+                this.cactusImg = new Image();
+                this.cactusImg.src = 'assets/cactus.png';
+                this.cactus2Img = new Image();
+                this.cactus2Img.src = 'assets/cactus2.png';
+                this.groundImg = new Image();
+                this.groundImg.src = 'assets/bg-ground.png';
+                this.backgroundImg = new Image();
+                this.backgroundImg.src = 'assets/bg-game.png';
+                
+                this.groundOffset = 0;
+                this.setupControls();
+                this.updateHUD();
+                window.addEventListener('resize', () => this.resizeCanvasAndRedraw());
+                this.draw();
+                this.gameLoop();
+            }
+            
+            playJumpSound() {
+                if (this.jumpSound) {
+                    this.jumpSound.currentTime = 0;
+                    this.jumpSound.play().catch(e => console.log('Audio play failed:', e));
+                }
+            }
+            
+            playDownSound() {
+                if (this.downSound) {
+                    this.downSound.currentTime = 0;
+                    this.downSound.play().catch(e => console.log('Audio play failed:', e));
+                }
+            }
+            
+            playWinSound() {
+                if (this.winSound) {
+                    this.winSound.currentTime = 0;
+                    this.winSound.play().catch(e => console.log('Audio play failed:', e));
+                }
+            }
+            
+            playLoseSound() {
+                if (this.loseSound) {
+                    this.loseSound.currentTime = 0;
+                    this.loseSound.play().catch(e => console.log('Audio play failed:', e));
+                }
+            }
+            
+            resizeCanvas() {
+                const container = this.canvas.parentElement;
+                const maxWidth = Math.min(1200, container.clientWidth - 20);
+                this.canvas.width = maxWidth;
+                this.canvas.height = 480;
+                this.width = this.canvas.width;
+                this.height = this.canvas.height;
+                this.groundY = this.height - 58;
+                if (this.dino && !this.isDucking) {
+                    this.dino.y = this.groundY - this.dino.height;
+                }
+            }
+            
+            resizeCanvasAndRedraw() {
+                this.resizeCanvas();
+                this.draw();
+            }
+            
+            loadBestScore() {
+                const user = JSON.parse(localStorage.getItem("user"));
+                if (user) {
+                    const saved = localStorage.getItem(`dino_best_${user.name}`);
+                    return saved ? parseInt(saved) : 0;
+                }
+                return 0;
+            }
+            
+            saveBestScore() {
+                const user = JSON.parse(localStorage.getItem("user"));
+                if (user && this.bestScore > 0) {
+                    localStorage.setItem(`dino_best_${user.name}`, this.bestScore);
+                }
+            }
+            
+            setupControls() {
+                const handleKeyDown = (e) => {
+                    const key = e.key;
+                    
+                    if (key === 'Shift' || key === 'ShiftLeft' || key === 'ShiftRight') {
+                        e.preventDefault();
+                        if (this.gameStarted && !this.gameOverFlag && !this.dino.isJumping && !this.isDucking) {
+                            this.isDucking = true;
+                            this.dino.height = this.duckHeight;
+                            this.dino.y = this.groundY - this.duckHeight;
+                            this.playDownSound();
+                        }
+                        return;
+                    }
+                    
+                    if (key === 'ArrowUp' || key === 'w' || key === 'W' || key === ' ' || key === 'Space') {
+                        e.preventDefault();
+                        
+                        if (this.gameOverFlag) {
+                            this.startGame();
+                            return;
+                        }
+                        
+                        if (!this.gameStarted && !this.gameOverFlag) {
+                            this.startGame();
+                            return;
+                        }
+                        
+                        if (this.gameStarted && !this.gameOverFlag) {
+                            if (!this.dino.isJumping) {
+                                if (this.isDucking) {
+                                    this.isDucking = false;
+                                    this.dino.height = this.standHeight;
+                                    this.dino.y = this.groundY - this.standHeight;
+                                }
+                                this.dino.yVelocity = this.dino.jumpPower;
+                                this.dino.isJumping = true;
+                                this.playJumpSound();
+                            }
+                        }
+                    }
+                };
+                
+                const handleKeyUp = (e) => {
+                    const key = e.key;
+                    if (key === 'Shift' || key === 'ShiftLeft' || key === 'ShiftRight') {
+                        e.preventDefault();
+                        this.isDucking = false;
+                        if (!this.dino.isJumping) {
+                            this.dino.height = this.standHeight;
+                            this.dino.y = this.groundY - this.standHeight;
+                        }
+                    }
+                };
+                
+                window.addEventListener('keydown', handleKeyDown);
+                window.addEventListener('keyup', handleKeyUp);
+                
+                this.canvas.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (this.gameOverFlag) {
+                        this.startGame();
+                        return;
+                    }
+                    if (!this.gameStarted && !this.gameOverFlag) {
+                        this.startGame();
+                        return;
+                    }
+                    if (this.gameStarted && !this.gameOverFlag) {
+                        if (!this.dino.isJumping) {
+                            if (this.isDucking) {
+                                this.isDucking = false;
+                                this.dino.height = this.standHeight;
+                                this.dino.y = this.groundY - this.standHeight;
+                            }
+                            this.dino.yVelocity = this.dino.jumpPower;
+                            this.dino.isJumping = true;
+                            this.playJumpSound();
+                        }
+                    }
+                });
+                
+                this.keyDownHandler = handleKeyDown;
+                this.keyUpHandler = handleKeyUp;
+            }
+            
+            startGame() {
+                if (this.gameStarted) return;
+                this.resetGameState();
+                this.gameStarted = true;
+                this.gameOverFlag = false;
+                this.waitingForStart = false;
+                this.currentSpeed = this.targetSpeed;
+                this.updateHUD();
+            }
+            
+            resetGameState() {
+                if (Math.floor(this.score) > this.bestScore) {
+                    this.bestScore = Math.floor(this.score);
+                    this.saveBestScore();
+                }
+                this.score = 0;
+                this.currentSpeed = 0;
+                this.targetSpeed = 4.5;
+                this.obstacles = [];
+                this.obstacleTimer = 20;
+                this.isDucking = false;
+                this.dino.height = this.standHeight;
+                this.dino.y = this.groundY - this.standHeight;
+                this.dino.yVelocity = 0;
+                this.dino.isJumping = false;
+                this.gameOverFlag = false;
+                this.gameStarted = false;
+                this.waitingForStart = true;
+                this.cactusGroupCounter = 0;
+                this.cactusGroupSize = 1;
+                this.updateHUD();
+            }
+            
+            resetGame() {
+                this.bestScore = 0;
+                this.saveBestScore();
+                this.score = 0;
+                this.currentSpeed = 0;
+                this.targetSpeed = 4.5;
+                this.obstacles = [];
+                this.obstacleTimer = 20;
+                this.isDucking = false;
+                this.dino.height = this.standHeight;
+                this.dino.y = this.groundY - this.standHeight;
+                this.dino.yVelocity = 0;
+                this.dino.isJumping = false;
+                this.gameOverFlag = false;
+                this.gameStarted = false;
+                this.waitingForStart = true;
+                this.cactusGroupCounter = 0;
+                this.cactusGroupSize = 1;
+                this.updateHUD();
+                this.draw();
+            }
+            
+            updateHUD() {
+                if (this.hud.scoreSpan) this.hud.scoreSpan.innerText = Math.floor(this.score);
+                if (this.hud.bestSpan) this.hud.bestSpan.innerText = this.bestScore;
+            }
+            
+            gameOver() {
+                if (this.gameOverFlag) return;
+                this.gameOverFlag = true;
+                this.gameStarted = false;
+                this.playLoseSound();
+                if (Math.floor(this.score) > this.bestScore) {
+                    this.bestScore = Math.floor(this.score);
+                    this.saveBestScore();
+                    this.updateHUD();
+                }
+                this.updateHUD();
+                saveGameResult('dino', Math.floor(this.score));
+            }
+            
+            spawnObstacle() {
+                const canSpawnRaven = this.score >= 100;
+                const canSpawnDoubleCactus = this.score >= 10;
+                
+                if (canSpawnRaven && Math.random() < 0.35) {
+                    const isHigh = Math.random() < 0.45;
+                    let yPos = isHigh ? this.groundY - 70 : this.groundY - 38;
+                    this.obstacles.push({
+                        x: this.width,
+                        y: yPos,
+                        width: 42,
+                        height: 38,
+                        type: 'raven',
+                        img: this.ravenImg
+                    });
+                    this.cactusGroupCounter = 0;
+                } else {
+                    if (this.cactusGroupCounter <= 0) {
+                        let rand = Math.random();
+                        if (rand < 0.4) {
+                            this.cactusGroupSize = 1;
+                            this.cactusGroupType = 'single';
+                        } else if (rand < 0.7 && canSpawnDoubleCactus) {
+                            this.cactusGroupSize = 1;
+                            this.cactusGroupType = 'double';
+                        } else {
+                            this.cactusGroupSize = 2;
+                            this.cactusGroupType = 'single';
+                        }
+                        this.cactusGroupCounter = this.cactusGroupSize;
+                    }
+                    
+                    if (this.cactusGroupCounter > 0) {
+                        let cactusX = this.width;
+                        let spacing = 28;
+                        if (this.cactusGroupSize > 1 && this.cactusGroupCounter < this.cactusGroupSize) {
+                            cactusX = this.width + spacing;
+                        }
+                        
+                        let cactusImg = this.cactusImg;
+                        let cactusWidth = 20;
+                        let cactusHeight = 48;
+                        
+                        if (this.cactusGroupType === 'double') {
+                            cactusImg = this.cactus2Img;
+                            cactusWidth = 44;
+                            cactusHeight = 48;
+                        }
+                        
+                        this.obstacles.push({
+                            x: cactusX,
+                            y: this.groundY - cactusHeight,
+                            width: cactusWidth,
+                            height: cactusHeight,
+                            type: 'cactus',
+                            img: cactusImg
+                        });
+                        this.cactusGroupCounter--;
+                    }
+                }
+            }
+            
+            updateGame() {
+                if (!this.gameStarted || this.gameOverFlag) return;
+                
+                const now = Date.now();
+                if (this.lastUpdate && now - this.lastUpdate < 16) return;
+                this.lastUpdate = now;
+                
+                if (this.targetSpeed < this.maxSpeed) {
+                    this.targetSpeed += this.speedIncreaseStep;
+                    if (this.targetSpeed > this.maxSpeed) this.targetSpeed = this.maxSpeed;
+                }
+                this.currentSpeed = this.targetSpeed;
+                
+                this.score += 0.1;
+                this.updateHUD();
+                
+                if (this.dino.isJumping) {
+                    this.dino.yVelocity += this.dino.gravity;
+                    this.dino.y += this.dino.yVelocity;
+                    if (this.dino.y >= this.groundY - this.dino.height) {
+                        this.dino.y = this.groundY - this.dino.height;
+                        this.dino.isJumping = false;
+                        this.dino.yVelocity = 0;
+                    }
+                    if (this.dino.y < 0) this.dino.y = 0;
+                }
+                
+                if (this.obstacleTimer <= 0) {
+                    this.spawnObstacle();
+                    let delay = Math.max(45, this.baseObstacleDelay - Math.floor((this.targetSpeed - 4.5) * 2.5));
+                    this.obstacleTimer = delay;
+                } else {
+                    this.obstacleTimer--;
+                }
+                
+                for (let i = 0; i < this.obstacles.length; i++) {
+                    const obs = this.obstacles[i];
+                    obs.x -= this.currentSpeed;
+                    if (obs.x + obs.width < 0) {
+                        this.obstacles.splice(i, 1);
+                        i--;
+                        continue;
+                    }
+                    
+                    let dinoHitbox = {
+                        x: this.dino.x + 5,
+                        y: this.dino.y + 5,
+                        width: this.dino.width - 10,
+                        height: this.dino.height - 8
+                    };
+                    
+                    let obsHitbox = {
+                        x: obs.x + 3,
+                        y: obs.y + 5,
+                        width: obs.width - 6,
+                        height: obs.height - 10
+                    };
+                    
+                    if (!this.gameOverFlag &&
+                        dinoHitbox.x < obsHitbox.x + obsHitbox.width &&
+                        dinoHitbox.x + dinoHitbox.width > obsHitbox.x &&
+                        dinoHitbox.y < obsHitbox.y + obsHitbox.height &&
+                        dinoHitbox.y + dinoHitbox.height > obsHitbox.y) {
+                        this.gameOver();
+                    }
+                }
+                
+                this.groundOffset = (this.groundOffset + this.currentSpeed) % 2400;
+            }
+            
+            drawStartPanel() {
+                const panelWidth = 200;
+                const panelHeight = 80;
+                const panelX = (this.width - panelWidth) / 2;
+                const panelY = (this.height - panelHeight) / 2 - 40;
+                
+                this.ctx.shadowBlur = 0;
+                this.ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+                this.ctx.beginPath();
+                this.ctx.roundRect(panelX, panelY, panelWidth, panelHeight, 30);
+                this.ctx.fill();
+                
+                this.ctx.strokeStyle = "#5C62EC";
+                this.ctx.lineWidth = 2;
+                this.ctx.beginPath();
+                this.ctx.roundRect(panelX, panelY, panelWidth, panelHeight, 30);
+                this.ctx.stroke();
+                
+                this.ctx.font = "bold 24px 'Poppins'";
+                this.ctx.fillStyle = "#ffffff";
+                this.ctx.textAlign = "center";
+                this.ctx.fillText("START", this.width / 2, panelY + 38);
+                
+                this.ctx.font = "12px 'DM Sans'";
+                this.ctx.fillStyle = "#ffffff";
+                this.ctx.fillText("НАЖМИТЕ ПРОБЕЛ", this.width / 2, panelY + 65);
+                
+                this.ctx.textAlign = "left";
+            }
+            
+            drawGameOverPanel() {
+                const panelWidth = 220;
+                const panelHeight = 70;
+                const panelX = (this.width - panelWidth) / 2;
+                const panelY = (this.height - panelHeight) / 2 - 20;
+                
+                this.ctx.shadowBlur = 0;
+                this.ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
+                this.ctx.beginPath();
+                this.ctx.roundRect(panelX, panelY, panelWidth, panelHeight, 25);
+                this.ctx.fill();
+                
+                this.ctx.strokeStyle = "#5C62EC";
+                this.ctx.lineWidth = 2;
+                this.ctx.beginPath();
+                this.ctx.roundRect(panelX, panelY, panelWidth, panelHeight, 25);
+                this.ctx.stroke();
+                
+                this.ctx.font = "bold 18px 'Poppins'";
+                this.ctx.fillStyle = "#ffffff";
+                this.ctx.textAlign = "center";
+                this.ctx.fillText("ВЫ ПРОИГРАЛИ!", this.width / 2, panelY + 45);
+                
+                this.ctx.textAlign = "left";
+            }
+            
+            draw() {
+                this.ctx.clearRect(0, 0, this.width, this.height);
+                
+                if (this.backgroundImg.complete && this.backgroundImg.naturalWidth > 0) {
+                    this.ctx.drawImage(this.backgroundImg, 0, 0, this.width, this.height);
+                } else {
+                    this.ctx.fillStyle = "#1a1a2e";
+                    this.ctx.fillRect(0, 0, this.width, this.height);
+                }
+                
+                if (this.groundImg.complete && this.groundImg.naturalWidth > 0) {
+                    this.ctx.drawImage(this.groundImg, -this.groundOffset, this.groundY - 12, 2400, 70);
+                    this.ctx.drawImage(this.groundImg, 2400 - this.groundOffset, this.groundY - 12, 2400, 70);
+                } else {
+                    this.ctx.fillStyle = "#3a3a44";
+                    this.ctx.fillRect(0, this.groundY, this.width, 14);
+                    this.ctx.fillStyle = "#8f8fa8";
+                    this.ctx.fillRect(0, this.groundY + 12, this.width, 3);
+                }
+                
+                let dinoImage = this.isDucking ? this.dinoDuckImg : this.dinoStandImg;
+                if (dinoImage.complete && dinoImage.naturalWidth > 0) {
+                    this.ctx.drawImage(dinoImage, this.dino.x, this.dino.y, this.dino.width, this.dino.height);
+                } else {
+                    this.ctx.fillStyle = "#3c8c40";
+                    this.ctx.fillRect(this.dino.x, this.dino.y, this.dino.width, this.dino.height);
+                    this.ctx.fillStyle = "white";
+                    this.ctx.beginPath();
+                    this.ctx.arc(this.dino.x + this.dino.width - 8, this.dino.y + 12, 5, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    this.ctx.fillStyle = "#111";
+                    this.ctx.beginPath();
+                    this.ctx.arc(this.dino.x + this.dino.width - 6, this.dino.y + 11, 2, 0, Math.PI * 2);
+                    this.ctx.fill();
+                }
+                
+                for (let obs of this.obstacles) {
+                    if (obs.img && obs.img.complete && obs.img.naturalWidth > 0) {
+                        this.ctx.drawImage(obs.img, obs.x, obs.y, obs.width, obs.height);
+                    } else {
+                        this.ctx.fillStyle = obs.type === 'raven' ? "#2d3e2d" : "#4a8c4a";
+                        this.ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+                    }
+                }
+                
+                if (this.waitingForStart && !this.gameStarted && !this.gameOverFlag) {
+                    this.drawStartPanel();
+                } else if (this.gameOverFlag) {
+                    this.drawGameOverPanel();
+                }
+            }
+            
+            gameLoop() {
+                this.updateGame();
+                this.draw();
+                this.animationId = requestAnimationFrame(() => this.gameLoop());
+            }
+            
+            destroy() {
+                if (this.animationId) cancelAnimationFrame(this.animationId);
+                if (this.keyDownHandler) window.removeEventListener('keydown', this.keyDownHandler);
+                if (this.keyUpHandler) window.removeEventListener('keyup', this.keyUpHandler);
+            }
+        }
+        
+        if (!window.CanvasRenderingContext2D.prototype.roundRect) {
+            window.CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+                if (w < 2 * r) r = w / 2;
+                if (h < 2 * r) r = h / 2;
+                this.moveTo(x+r, y);
+                this.lineTo(x+w-r, y);
+                this.quadraticCurveTo(x+w, y, x+w, y+r);
+                this.lineTo(x+w, y+h-r);
+                this.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+                this.lineTo(x+r, y+h);
+                this.quadraticCurveTo(x, y+h, x, y+h-r);
+                this.lineTo(x, y+r);
+                this.quadraticCurveTo(x, y, x+r, y);
+                return this;
+            };
+        }
+        
+        function initDinoGame() {
+            const container = document.getElementById('game-content');
+            const user = JSON.parse(localStorage.getItem("user"));
+            
+            if (!user) {
+                container.innerHTML = `<div style="text-align:center; padding:80px; color:var(--text-color);">АВТОРИЗУЙТЕСЬ, ЧТОБЫ ИГРАТЬ</div>`;
+                return;
+            }
+            
+            container.innerHTML = `
+                <div class="dino-top-notch">
+                    <div class="dino-notch-item"><span>Игрок:</span><span id="dinoPlayerName">${escapeHtml(user.name)}</span></div>
+                    <div class="dino-notch-item"><span>Ваш рекорд:</span><span id="dinoBestScore">0</span></div>
+                    <div class="dino-notch-item"><span>Ваш счет:</span><span id="dinoCurrentScore">0</span></div>
+                </div>
+                
+                <div class="canvas-wrapper">
+                    <canvas id="dinoCanvas"></canvas>
+                </div>
+                
+                <div class="dino-bottom-notch">
+                    <button class="dino-notch-btn" id="dinoStartBtn">СТАРТ</button>
+                    <button class="dino-notch-btn reset-btn" id="dinoResetBtn">СБРОС</button>
+                    <button class="dino-notch-btn exit-btn" id="dinoExitBtn">НА ГЛАВНУЮ</button>
+                    <div class="dino-notch-controls">
+                        <span><kbd>SHIFT</kbd> ПРИГНУТЬСЯ</span>
+                        <span><kbd>ПРОБЕЛ</kbd> ПРЫГНУТЬ</span>
+                    </div>
+                </div>
+            `;
+            
+            const canvas = document.getElementById('dinoCanvas');
+            const ctx = canvas.getContext('2d');
+            const hudElements = {
+                scoreSpan: document.getElementById('dinoCurrentScore'),
+                bestSpan: document.getElementById('dinoBestScore'),
+                playerName: escapeHtml(user.name)
+            };
+            
+            if (dinoGame) {
+                dinoGame.destroy();
+                dinoGame = null;
+            }
+            dinoGame = new DinoRunnerGame(canvas, ctx, hudElements);
+            
+            document.getElementById('dinoStartBtn').onclick = () => {
+                if (dinoGame.gameOverFlag) dinoGame.resetGameState();
+                dinoGame.startGame();
+            };
+            document.getElementById('dinoResetBtn').onclick = () => {
+                dinoGame.resetGame();
+            };
+            document.getElementById('dinoExitBtn').onclick = () => {
+                window.location.href = 'index.html';
+            };
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = JSON.parse(localStorage.getItem("user"));
+            const userInfoDiv = document.getElementById("user-info");
+            
+            if (user && user.email) {
+                const avatarUrl = user.avatar || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+                userInfoDiv.innerHTML = `
+                    <div class="profile-menu">
+                        <div class="profile-btn" onclick="toggleMenu()">
+                            <img src="${avatarUrl}" class="avatar">
+                            <span>${escapeHtml(user.name)}</span>
+                        </div>
+                        <div class="dropdown-menu" id="dropdown-menu">
+                            <button onclick="logout()">Выйти</button>
+                        </div>
+                    </div>
+                `;
+                initDinoGame();
+            } else {
+                window.location.href = 'lgpass.html';
+            }
+        });
+        
+        window.toggleMenu = toggleMenu;
+        window.logout = logout;
+    </script>
+</body>
+</html>

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Колесо Фортуны</title>
+    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="game.css">
+</head>
+<body>
+    <nav class="nav">
+        <div class="container">
+            <div class="nav-row">
+                <a href="index.html" class="logo"><strong>Shopify</strong> Game</a>
+                <button class="dark-mode-btn">
+                    <img src="img/icons/sun.svg" alt="Light mode" class="dark-mode-btn__icon">
+                    <img src="img/icons/moon.svg" alt="Dark mode" class="dark-mode-btn__icon">
+                </button>
+                <ul class="nav-list">
+                    <li class="nav-list__item"><a href="index.html" class="nav-list__link">Главная</a></li>
+                    <li class="nav-list__item"><a href="contacts.html" class="nav-list__link">Контакты</a></li>
+                    <li class="nav-list__item"><div id="user-info"></div></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <main class="section">
+        <div class="container">
+            <div class="project-details">
+                <h1 class="title-1">Колесо Фортуны</h1>
+                <div class="wheel-container">
+                    <div class="wheel-wrapper">
+                        <div id="wheel-pointer"></div>
+                        <canvas id="wheel" width="400" height="400"></canvas>
+                    </div>
+                    <div class="wheel-controls">
+                        <div class="prize-inputs">
+                            <input type="text" id="prize1" placeholder="Введите текст">
+                            <input type="text" id="prize2" placeholder="Введите текст">
+                            <input type="text" id="prize3" placeholder="Введите текст">
+                            <input type="text" id="prize4" placeholder="Введите текст">
+                            <input type="text" id="prize5" placeholder="Введите текст">
+                            <input type="text" id="prize6" placeholder="Введите текст">
+                            <input type="text" id="prize7" placeholder="Введите текст">
+                            <input type="text" id="prize8" placeholder="Введите текст">
+                        </div>
+                        <div class="wheel-buttons">
+                            <button id="update-btn">Обновить рулетку</button>
+                            <button id="spin-btn">Крутить рулетку</button>
+                            <button id="reset-btn" disabled>Сбросить</button>
+                        </div>
+                    </div>
+                    <div class="wheel-result" id="result">Введите призы и обновите рулетку</div>
+                </div>
+                <div class="project-details__desc"></div>
+            </div>
+        </div>
+    </main>
+    <footer class="footer">
+        <div class="container">
+            <div class="footer__wrapper">
+                <ul class="social">
+                    <li class="social__item"><a href="#!"><img src="img/icons/vk.svg" alt="Link"></a></li>
+                    <li class="social__item"><a href="#!"><img src="img/icons/instagram.svg" alt="Link"></a></li>
+                    <li class="social__item"><a href="#!"><img src="img/icons/twitter.svg" alt="Link"></a></li>
+                    <li class="social__item"><a href="#!"><img src="img/icons/gitHub.svg" alt="Link"></a></li>
+                    <li class="social__item"><a href="#!"><img src="img/icons/linkedIn.svg" alt="Link"></a></li>
+                </ul>
+                <div class="copyright">
+                    <p>© 2026 IT.Москва</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <script src="js/main-obf.js"></script>
+    <script>
+        const user = JSON.parse(localStorage.getItem("user"));
+        const userInfo = document.getElementById("user-info");
+
+        if (user) {
+            const avatarUrl = user.avatar || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+            userInfo.innerHTML = `
+                <div class="profile-menu">
+                    <div class="profile-btn" onclick="toggleMenu()">
+                        <img src="${avatarUrl}" class="avatar">
+                        <span>${user.name}</span>
+                    </div>
+                    <div class="dropdown-menu" id="dropdown-menu">
+                        <button onclick="logout()">Выйти</button>
+                    </div>
+                </div>
+            `;
+        } else {
+            userInfo.innerHTML = `<a href="lgpass.html" class="nav-list__link">Войти</a>`;
+        }
+
+        function logout() {
+            localStorage.removeItem("user");
+            window.location.href = 'lgpass.html';
+        }
+
+        function toggleMenu() {
+            document.getElementById("dropdown-menu")?.classList.toggle("show-menu");
+        }
+
+        (function() {
+            const userCheck = JSON.parse(localStorage.getItem("user"));
+            if (!userCheck || !userCheck.email) {
+                window.location.href = 'lgpass.html';
+                return;
+            }
+        })();
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const wheelCanvas = document.getElementById('wheel');
+            const ctx = wheelCanvas.getContext('2d');
+            const spinBtn = document.getElementById('spin-btn');
+            const resetBtn = document.getElementById('reset-btn');
+            const updateBtn = document.getElementById('update-btn');
+            const resultElement = document.getElementById('result');
+            const prizeInputs = [
+                document.getElementById('prize1'),
+                document.getElementById('prize2'),
+                document.getElementById('prize3'),
+                document.getElementById('prize4'),
+                document.getElementById('prize5'),
+                document.getElementById('prize6'),
+                document.getElementById('prize7'),
+                document.getElementById('prize8')
+            ];
+            
+            const colors = ['#FF5252', '#FFEB3B', '#4CAF50', '#2196F3', 
+                          '#9C27B0', '#FF9800', '#795548', '#607D8B'];
+            let activePrizes = [];
+            let activeColors = [];
+            let isSpinning = false;
+            let currentRotation = 0;
+            let updateTimeout = null;
+            
+            function getWinnerIndexFromPointer(rotationRad) {
+                if (activePrizes.length === 0) return -1;
+                const segmentCount = activePrizes.length;
+                const arc = (Math.PI * 2) / segmentCount;
+                const pointerAngle = (3 * Math.PI) / 2;
+                let rawAngle = pointerAngle - rotationRad;
+                let pointerDirection = ((rawAngle % (Math.PI * 2)) + (Math.PI * 2)) % (Math.PI * 2);
+                for (let i = 0; i < segmentCount; i++) {
+                    const start = i * arc;
+                    const end = (i + 1) * arc;
+                    if (pointerDirection >= start && pointerDirection < end) {
+                        return i;
+                    }
+                }
+                return 0;
+            }
+            
+            function updateWheel() {
+                if (updateTimeout) clearTimeout(updateTimeout);
+                updateTimeout = setTimeout(() => {
+                    activePrizes = [];
+                    activeColors = [];
+                    
+                    for (let i = 0; i < prizeInputs.length; i++) {
+                        if (prizeInputs[i].value.trim() !== '') {
+                            activePrizes.push(prizeInputs[i].value.trim());
+                            activeColors.push(colors[i]);
+                        }
+                    }
+                    
+                    if (activePrizes.length < 2) {
+                        resultElement.textContent = "Добавьте как минимум 2";
+                        spinBtn.disabled = true;
+                    } else {
+                        spinBtn.disabled = false;
+                        resultElement.textContent = "Готово к запуску! Введено: " + activePrizes.length;
+                    }
+                    drawWheel();
+                }, 100);
+            }
+            
+            function drawWheel() {
+                const centerX = wheelCanvas.width / 2;
+                const centerY = wheelCanvas.height / 2;
+                const radius = wheelCanvas.width / 2;
+                const segmentCount = activePrizes.length;
+                const arc = Math.PI * 2 / segmentCount;
+                
+                ctx.clearRect(0, 0, wheelCanvas.width, wheelCanvas.height);
+                
+                for (let i = 0; i < segmentCount; i++) {
+                    const angle = i * arc;
+                    ctx.beginPath();
+                    ctx.fillStyle = activeColors[i];
+                    ctx.moveTo(centerX, centerY);
+                    ctx.arc(centerX, centerY, radius, angle, angle + arc, false);
+                    ctx.lineTo(centerX, centerY);
+                    ctx.fill();
+                    ctx.strokeStyle = "#fff";
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    ctx.save();
+                    ctx.translate(centerX, centerY);
+                    ctx.rotate(angle + arc / 2);
+                    ctx.textAlign = "right";
+                    ctx.fillStyle = "#fff";
+                    ctx.font = "bold 18px Arial";
+                    
+                    const text = activePrizes[i];
+                    const maxLength = 12;
+                    const displayText = text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+                    
+                    ctx.fillText(displayText, radius - 30, 8);
+                    ctx.restore();
+                }
+                
+                ctx.beginPath();
+                ctx.fillStyle = "#fff";
+                ctx.arc(centerX, centerY, 20, 0, Math.PI * 2, false);
+                ctx.fill();
+            }
+            
+            function spinWheel() {
+                if (isSpinning || activePrizes.length < 2) return;
+                
+                isSpinning = true;
+                spinBtn.disabled = true;
+                updateBtn.disabled = true;
+                resetBtn.disabled = true;
+                resultElement.textContent = "Крутим...";
+                
+                const rotations = 12;
+                const randomOffset = Math.random() * Math.PI * 2;
+                const targetRotation = currentRotation + (Math.PI * 2 * rotations) + randomOffset;
+                const spinDuration = 4000;
+                const startTime = performance.now();
+                const startRotation = currentRotation;
+                
+                function animate(time) {
+                    const elapsed = time - startTime;
+                    const progress = Math.min(elapsed / spinDuration, 1);
+                    const easeProgress = 1 - Math.pow(1 - progress, 3);
+                    
+                    currentRotation = startRotation + (targetRotation - startRotation) * easeProgress;
+                    wheelCanvas.style.transform = `rotate(${currentRotation}rad)`;
+                    
+                    if (progress < 1) {
+                        requestAnimationFrame(animate);
+                    } else {
+                        finishSpin();
+                    }
+                }
+                
+                requestAnimationFrame(animate);
+            }
+
+            function finishSpin() {
+                const winnerIndex = getWinnerIndexFromPointer(currentRotation);
+                isSpinning = false;
+                spinBtn.disabled = false;
+                updateBtn.disabled = false;
+                resetBtn.disabled = false;
+                
+                if (winnerIndex >= 0 && winnerIndex < activePrizes.length) {
+                    const prize = activePrizes[winnerIndex];
+                    resultElement.textContent = prize;
+                    createConfetti();
+                } else {
+                    resultElement.textContent = "Ошибка";
+                }
+            }
+            
+            function resetWheel() {
+                if (isSpinning) return;
+                for (let i = 0; i < prizeInputs.length; i++) {
+                    prizeInputs[i].value = '';
+                }
+                activePrizes = [];
+                activeColors = [];
+                currentRotation = 0;
+                wheelCanvas.style.transform = 'rotate(0rad)';
+                drawWheel();
+                resultElement.textContent = "Введите призы и обновите рулетку";
+                spinBtn.disabled = true;
+                resetBtn.disabled = true;
+            }
+            
+            function createConfetti() {
+                const colorPalette = ['#f00', '#0f0', '#00f', '#ff0', '#f0f', '#0ff', '#f80', '#08f'];
+                
+                for (let i = 0; i < 200; i++) {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + 'vw';
+                    confetti.style.backgroundColor = colorPalette[Math.floor(Math.random() * colorPalette.length)];
+                    confetti.style.width = Math.random() * 10 + 5 + 'px';
+                    confetti.style.height = Math.random() * 10 + 5 + 'px';
+                    confetti.style.animationDuration = Math.random() * 2 + 2 + 's';
+                    confetti.style.transform = 'rotate(' + Math.random() * 360 + 'deg)';
+                    
+                    document.body.appendChild(confetti);
+                    
+                    setTimeout(() => {
+                        confetti.remove();
+                    }, 3000);
+                }
+            }
+            
+            for (let i = 0; i < prizeInputs.length; i++) {
+                prizeInputs[i].addEventListener('input', updateWheel);
+            }
+            
+            spinBtn.addEventListener('click', spinWheel);
+            resetBtn.addEventListener('click', resetWheel);
+            updateBtn.addEventListener('click', updateWheel);
+            
+            updateWheel();
+        });
+    </script>
+</body>
+</html>

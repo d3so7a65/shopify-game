@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pac-Man</title>
+    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="game.css">
+    <script src="js/saveScore.js"></script>
+</head>
+<body>
+
+<nav class="nav">
+    <div class="container">
+        <div class="nav-row">
+            <a href="index.html" class="logo"><strong>Shopify</strong> Game</a>
+            <button class="dark-mode-btn">
+                <img src="img/icons/sun.svg" class="dark-mode-btn__icon">
+                <img src="img/icons/moon.svg" class="dark-mode-btn__icon">
+            </button>
+            <ul class="nav-list">
+                <li class="nav-list__item"><a href="index.html" class="nav-list__link">Главная</a></li>
+                <li class="nav-list__item"><a href="contacts.html" class="nav-list__link">Контакты</a></li>
+                <li class="nav-list__item"><div id="user-info"></div></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="pacman-game-layout">
+    <div class="pacman-game-card">
+        <h1 class="pacman-game-title">PAC-MAN</h1>
+        <div id="pacmanBoard" class="pacman-board"></div>
+        <div class="pacman-buttons">
+            <button class="pacman-btn" id="pacmanNewGameBtn">НОВАЯ ИГРА</button>
+            <button class="pacman-btn" id="pacmanPauseBtn">ПАУЗА</button>
+        </div>
+        <div class="pacman-controls-info">
+            <div><span>↑</span> вверх</div>
+            <div><span>↓</span> вниз</div>
+            <div><span>←</span> влево</div>
+            <div><span>→</span> вправо</div>
+        </div>
+    </div>
+    <div class="pacman-side-panel">
+        <div class="pacman-info"><div class="pacman-info-title">СЧЁТ</div><div class="pacman-info-value" id="pacmanScore">0</div></div>
+        <div class="pacman-info"><div class="pacman-info-title">ЖИЗНИ</div><div class="pacman-info-value" id="pacmanLives">❤️❤️❤️</div></div>
+        <div class="pacman-info"><div class="pacman-info-title">УРОВЕНЬ</div><div class="pacman-info-value" id="pacmanLevel">1</div></div>
+    </div>
+</div>
+<footer class="footer">
+    <div class="container">
+        <div class="footer__wrapper">
+            <ul class="social">
+                <li class="social__item"><a href="#!"><img src="img/icons/vk.svg"></a></li>
+                <li class="social__item"><a href="#!"><img src="img/icons/instagram.svg"></a></li>
+                <li class="social__item"><a href="#!"><img src="img/icons/twitter.svg"></a></li>
+                <li class="social__item"><a href="#!"><img src="img/icons/gitHub.svg"></a></li>
+                <li class="social__item"><a href="#!"><img src="img/icons/linkedIn.svg"></a></li>
+            </ul>
+            <div class="copyright"><p>© 2026 IT.Москва</p></div>
+        </div>
+    </div>
+</footer>
+<script src="js/main-obf.js"></script>
+<script>
+const sounds = {
+    music: new Audio('assets/music.mp3'),
+    run: new Audio('assets/run.mp3'),
+    pause: new Audio('assets/pause.mp3'),
+    death: new Audio('assets/death.mp3')
+};
+
+sounds.music.loop = true;
+sounds.music.volume = 0.4;
+sounds.run.volume = 0.25;
+sounds.pause.loop = true;
+sounds.pause.volume = 0.35;
+sounds.death.volume = 0.5;
+
+let isMusicPlaying = false;
+let isPauseSoundPlaying = false;
+let lastMoveSoundTime = 0;
+let isDying = false;
+
+function startMusic() {
+    if (!isMusicPlaying && sounds.music.paused) {
+        sounds.music.play().catch(e => console.log("Music autoplay blocked"));
+        isMusicPlaying = true;
+    }
+}
+
+function stopMusic() {
+    sounds.music.pause();
+    sounds.music.currentTime = 0;
+    isMusicPlaying = false;
+}
+
+function startPauseSound() {
+    if (!isPauseSoundPlaying) {
+        sounds.pause.currentTime = 0;
+        sounds.pause.play().catch(e => console.log("Pause sound error"));
+        isPauseSoundPlaying = true;
+    }
+}
+
+function stopPauseSound() {
+    sounds.pause.pause();
+    sounds.pause.currentTime = 0;
+    isPauseSoundPlaying = false;
+}
+
+function playRunSound() {
+    const now = Date.now();
+    if (now - lastMoveSoundTime > 140) {
+        sounds.run.currentTime = 0;
+        sounds.run.play().catch(e => console.log("Run sound error"));
+        lastMoveSoundTime = now;
+    }
+}
+
+function playDeathSound() {
+    if (!isDying) {
+        isDying = true;
+        sounds.death.currentTime = 0;
+        sounds.death.play().catch(e => console.log("Death sound error"));
+        setTimeout(() => { isDying = false; }, 1000);
+    }
+}
+
+function applyTheme(){
+    if(document.body.classList.contains("dark")){
+        document.documentElement.classList.add("dark");
+    }else{
+        document.documentElement.classList.remove("dark");
+    }
+}
+applyTheme();
+new MutationObserver(applyTheme).observe(document.body,{attributes:true,attributeFilter:["class"]});
+
+const user = JSON.parse(localStorage.getItem("user"));
+const userInfo = document.getElementById("user-info");
+if(user){
+    userInfo.innerHTML = `
+    <div class="profile-menu">
+        <div class="profile-btn" onclick="toggleMenu()">
+            <img src="${user.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" class="avatar">
+            <span>${user.name}</span>
+        </div>
+        <div class="dropdown-menu" id="dropdown-menu">
+            <button onclick="logout()">Выйти</button>
+        </div>
+    </div>`;
+    setTimeout(()=>{
+        window.toggleMenu = function() {
+            document.getElementById("dropdown-menu").classList.toggle("show-menu");
+        };
+    });
+}else{
+    userInfo.innerHTML = `<a href="lgpass.html" class="nav-list__link">Войти</a>`;
+}
+
+function logout() {
+    localStorage.removeItem("user");
+    window.location.href = 'lgpass.html';
+}
+
+const TILE = 32, W = 19, H = 20;
+const MAPS = [
+["###################","#........#........#","#.###.##.#.##.###.#","#o###.##.#.##.###o#","#.................#","#.###.#.###.#.###.#","#.....#.....#.....#","#####.### ###.#####","#####.#     #.#####","#####.# ### #.#####","     .  GGG  .     ","#####.# ### #.#####","#####.#     #.#####","#####.#.###.#.###.#","#.........#.......#","#.###.###.#.###.#.#","#o..#........#...o#","###.#.#.###.#.#.###","#.......#.........#","###################"],
+["###################","#.................#","#.#####.###.#####.#","#o#.............#o#","#.#.###.#.#.###.#.#","#...#...#.#...#...#","###.#.#####.#.#.###","#.....#GGG#.#.....#","#.###.#   #.#.###.#","#.#.............#.#","#.#.###.#.#.###.#.#","#.....#.#.#.#.....#","#####.#.#.#.#.#####","#........#........#","#.#####.###.#####.#","#o....#.....#....o#","###.#.#######.#.###","#...#.........#...#","#.................#","###################"]
+];
+
+let currentLevel = 1;
+let map = [];
+let board = document.getElementById("pacmanBoard");
+let player = { x:1, y:1, dir:"right" };
+let playerEl = null;
+let ghosts = [];
+let score = 0, lives = 3;
+let gameStartTime = Date.now();
+let paused = false;
+let rageMode = false;
+let rageEndTimeout = null;
+let rageWhiteTimeout = null;
+
+function getRandomMap(){
+    const m = MAPS[Math.floor(Math.random()*MAPS.length)];
+    return m.map(r=>r.split(""));
+}
+
+function createPlayer(){
+    if(playerEl) playerEl.remove();
+    playerEl = document.createElement("img");
+    playerEl.src = "assets/pacman.png";
+    playerEl.className = "pacman-player";
+    board.appendChild(playerEl);
+}
+
+function createGhosts(){
+    ghosts.forEach(g=>g.el?.remove());
+    ghosts = [];
+    const spawn = [[9,10,"ghost1.png"],[10,10,"ghost2.png"],[9,9,"ghost3.png"],[10,9,"ghost4.png"]];
+    spawn.forEach(([x,y,img])=>{
+        const el = document.createElement("img");
+        el.src = `assets/${img}`;
+        el.className = "pacman-ghost";
+        board.appendChild(el);
+        ghosts.push({ x, y, img, el, alive:true, state:"patrol", targetX:x, targetY:y, patrolTimer:0 });
+    });
+}
+
+function drawMap(){
+    board.querySelectorAll(".pacman-cell").forEach(e=>e.remove());
+    for(let y=0;y<H;y++){
+        for(let x=0;x<W;x++){
+            const val = map[y][x];
+            const cell = document.createElement("div");
+            cell.className = "pacman-cell";
+            cell.style.left = `${x*TILE}px`;
+            cell.style.top = `${y*TILE}px`;
+            if(val==="#") cell.classList.add("pacman-wall");
+            if(val==="."){
+                const dot = document.createElement("div");
+                dot.className = "pacman-dot";
+                cell.appendChild(dot);
+            }
+            if(val==="o"){
+                const power = document.createElement("div");
+                power.className = "pacman-power";
+                cell.appendChild(power);
+            }
+            board.appendChild(cell);
+        }
+    }
+}
+
+function updatePositions(){
+    if(playerEl){
+        playerEl.style.left = `${player.x*TILE+2}px`;
+        playerEl.style.top = `${player.y*TILE+2}px`;
+        let rot = 0;
+        if(player.dir==="right") rot=0;
+        if(player.dir==="left") rot=180;
+        if(player.dir==="up") rot=-90;
+        if(player.dir==="down") rot=90;
+        playerEl.style.transform = `rotate(${rot}deg)`;
+    }
+    ghosts.forEach(g=>{
+        if(g.el && g.alive){
+            g.el.style.left = `${g.x*TILE+2}px`;
+            g.el.style.top = `${g.y*TILE+2}px`;
+        }
+    });
+}
+
+function canMove(x,y){
+    if(x<0 || x>=W || y<0 || y>=H) return false;
+    return map[y] && map[y][x] && map[y][x] !== "#";
+}
+
+function findPath(sx,sy,tx,ty){
+    if(!canMove(sx,sy) || !canMove(tx,ty)) return null;
+    let queue = [{x:sx,y:sy,path:[]}];
+    let visited = new Set([`${sx},${sy}`]);
+    let dirs = [[1,0],[-1,0],[0,1],[0,-1]];
+    while(queue.length){
+        let cur = queue.shift();
+        if(cur.x===tx && cur.y===ty) return cur.path;
+        for(let [dx,dy] of dirs){
+            let nx=cur.x+dx, ny=cur.y+dy;
+            let key=`${nx},${ny}`;
+            if(canMove(nx,ny) && !visited.has(key)){
+                visited.add(key);
+                queue.push({x:nx,y:ny,path:[...cur.path,{dx,dy}]});
+            }
+        }
+    }
+    return null;
+}
+
+function getRandomPatrolPoint(g){
+    let pts=[];
+    for(let y=0;y<H;y++) for(let x=0;x<W;x++) if(canMove(x,y) && !(x===g.x&&y===g.y)){
+        let d=Math.abs(x-g.x)+Math.abs(y-g.y);
+        if(d>5 && d<20) pts.push({x,y});
+    }
+    if(!pts.length) for(let y=0;y<H;y++) for(let x=0;x<W;x++) if(canMove(x,y)) pts.push({x,y});
+    return pts.length ? pts[Math.floor(Math.random()*pts.length)] : {x:g.x,y:g.y};
+}
+
+function checkLineOfSight(x1,y1,x2,y2){
+    if(x1===x2){
+        let sy=y1<y2?1:-1;
+        for(let y=y1+sy; y!==y2; y+=sy) if(!canMove(x1,y)) return false;
+        return true;
+    }
+    if(y1===y2){
+        let sx=x1<x2?1:-1;
+        for(let x=x1+sx; x!==x2; x+=sx) if(!canMove(x,y1)) return false;
+        return true;
+    }
+    return false;
+}
+
+function tryAlternativeMove(g){
+    let dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+    for(let i=dirs.length-1;i>0;i--){ let j=Math.floor(Math.random()*(i+1)); [dirs[i],dirs[j]]=[dirs[j],dirs[i]]; }
+    for(let [dx,dy] of dirs){
+        let nx=g.x+dx, ny=g.y+dy;
+        if(canMove(nx,ny)){
+            let occ=ghosts.some(o=>o!==g && o.alive && o.x===nx && o.y===ny);
+            if(!occ){ g.x=nx; g.y=ny; break; }
+        }
+    }
+}
+
+function ghostMove(g){
+    if(paused) return;
+    let los = checkLineOfSight(g.x,g.y,player.x,player.y);
+    let dist = Math.abs(g.x-player.x)+Math.abs(g.y-player.y);
+    if(!rageMode){
+        g.state = (los || dist<8) ? "chase" : "patrol";
+    } else {
+        g.state = "chase";
+    }
+    let tx=player.x, ty=player.y;
+    if(g.state==="patrol"){
+        g.patrolTimer--;
+        if(g.patrolTimer<=0 || (g.x===g.targetX && g.y===g.targetY)){
+            let np=getRandomPatrolPoint(g);
+            g.targetX=np.x; g.targetY=np.y;
+            g.patrolTimer=80+Math.random()*100;
+        }
+        tx=g.targetX; ty=g.targetY;
+    }
+    let path=findPath(g.x,g.y,tx,ty);
+    if(path && path.length){
+        let step=path[0];
+        let nx=g.x+step.dx, ny=g.y+step.dy;
+        if(canMove(nx,ny)){
+            let occ=ghosts.some(o=>o!==g && o.alive && o.x===nx && o.y===ny);
+            if(!occ){ g.x=nx; g.y=ny; }
+            else tryAlternativeMove(g);
+        }
+    } else tryAlternativeMove(g);
+}
+
+function activateRageMode(){
+    if(rageMode) return;
+    rageMode=true;
+    ghosts.forEach(g=>{ if(g.alive) g.el.src="assets/ghost5.png"; });
+    if(rageEndTimeout) clearTimeout(rageEndTimeout);
+    if(rageWhiteTimeout) clearTimeout(rageWhiteTimeout);
+    rageEndTimeout = setTimeout(()=>{
+        ghosts.forEach(g=>{ if(g.alive) g.el.src="assets/ghost6.png"; });
+        rageWhiteTimeout = setTimeout(()=>{
+            rageMode=false;
+            ghosts.forEach(g=>{ if(g.alive) g.el.src=`assets/${g.img}`; });
+            rageEndTimeout=null;
+            rageWhiteTimeout=null;
+        }, 800);
+    }, 14000);
+}
+
+function movePlayer(dx,dy,dir){
+    if(paused) return;
+    let nx=player.x+dx, ny=player.y+dy;
+    if(canMove(nx,ny)){
+        playRunSound();
+        player.x=nx; player.y=ny; player.dir=dir;
+        if(map[ny][nx]==="."){ map[ny][nx]=" "; score+=10; }
+        if(map[ny][nx]==="o"){ map[ny][nx]=" "; score+=50; activateRageMode(); }
+        updateHUD(); drawMap(); checkLevel();
+    }
+}
+
+function saveGameStats() {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user) return;
+    const playTime = Math.floor((Date.now() - gameStartTime) / 60000);
+    const existing = localStorage.getItem(`pacman_stats_${user.name}`);
+    let oldTime = 0;
+    let oldLevel = currentLevel;
+    let oldBossCount = 0;
+    if (existing) {
+        try {
+            const old = JSON.parse(existing);
+            oldTime = old.playTime || 0;
+            oldLevel = Math.max(old.level || 1, currentLevel);
+            oldBossCount = (old.bossCount || 0) + (rageWhiteTimeout ? 1 : 0);
+        } catch(e) {}
+    }
+    localStorage.setItem(`pacman_stats_${user.name}`, JSON.stringify({
+        level: Math.max(oldLevel, currentLevel),
+        bossCount: oldBossCount,
+        playTime: oldTime + playTime
+    }));
+}
+
+let keys={};
+document.addEventListener("keydown",e=>{
+    let k=e.key;
+    if(k==="ArrowUp") keys.ArrowUp=true;
+    if(k==="ArrowDown") keys.ArrowDown=true;
+    if(k==="ArrowLeft") keys.ArrowLeft=true;
+    if(k==="ArrowRight") keys.ArrowRight=true;
+    e.preventDefault();
+});
+document.addEventListener("keyup",e=>{
+    let k=e.key;
+    if(k==="ArrowUp") keys.ArrowUp=false;
+    if(k==="ArrowDown") keys.ArrowDown=false;
+    if(k==="ArrowLeft") keys.ArrowLeft=false;
+    if(k==="ArrowRight") keys.ArrowRight=false;
+});
+
+setInterval(()=>{
+    if(keys.ArrowUp) movePlayer(0,-1,"up");
+    if(keys.ArrowDown) movePlayer(0,1,"down");
+    if(keys.ArrowLeft) movePlayer(-1,0,"left");
+    if(keys.ArrowRight) movePlayer(1,0,"right");
+    updatePositions();
+},130);
+
+setInterval(()=>{
+    ghosts.forEach(g=>{ if(g.alive) ghostMove(g); });
+    ghosts.forEach(g=>{
+        if(g.alive && g.x===player.x && g.y===player.y){
+            playDeathSound();
+            lives--;
+            updateHUD();
+            if(lives<=0){
+                stopMusic();
+                showGameOver();
+                saveGameStats();
+            } else {
+                player.x=1;
+                player.y=1;
+                player.dir="right";
+                let spawn=[[9,10,"ghost1.png"],[10,10,"ghost2.png"],[9,9,"ghost3.png"],[10,9,"ghost4.png"]];
+                ghosts.forEach((g,idx)=>{
+                    g.x=spawn[idx][0];
+                    g.y=spawn[idx][1];
+                    g.alive=true;
+                    g.el.style.display="block";
+                    g.el.src=`assets/${spawn[idx][2]}`;
+                    g.state="patrol";
+                    g.patrolTimer=0;
+                });
+                if(rageMode){
+                    if(rageEndTimeout) clearTimeout(rageEndTimeout);
+                    if(rageWhiteTimeout) clearTimeout(rageWhiteTimeout);
+                    rageMode=false;
+                }
+                updatePositions();
+            }
+        }
+    });
+    updatePositions();
+},350);
+
+function checkLevel(){
+    let left=0;
+    map.forEach(r=>r.forEach(c=>{ if(c==="."||c==="o") left++; }));
+    if(left===0){
+        currentLevel++;
+        if(currentLevel>6) currentLevel=1;
+        document.getElementById("pacmanLevel").innerText=currentLevel;
+        map=getRandomMap();
+        player.x=1;
+        player.y=1;
+        player.dir="right";
+        createGhosts();
+        drawMap();
+        updatePositions();
+        if(rageEndTimeout) clearTimeout(rageEndTimeout);
+        if(rageWhiteTimeout) clearTimeout(rageWhiteTimeout);
+        rageMode=false;
+    }
+}
+
+function updateHUD(){
+    document.getElementById("pacmanScore").innerText=score;
+    document.getElementById("pacmanLives").innerHTML="❤️".repeat(lives);
+}
+
+function showGameOver(){
+    saveGameResult('pacman', score);
+    paused=true;
+    let modal=document.createElement("div");
+    modal.className="pacman-pause-modal-overlay";
+    modal.innerHTML=`<div class="pacman-pause-modal"><div class="pacman-pause-icon">😒</div><h2>Вас съели</h2><button class="pacman-pause-resume-btn" id="gameOverRestart">НОВАЯ ИГРА</button></div>`;
+    document.body.appendChild(modal);
+    document.getElementById("gameOverRestart").onclick=()=>{ modal.remove(); location.reload(); };
+}
+
+function showPauseMenu(){
+    paused=true;
+    stopMusic();
+    startPauseSound();
+    let modal=document.createElement("div");
+    modal.className="pacman-pause-modal-overlay";
+    modal.id="pauseModalOverlay";
+    modal.innerHTML=`<div class="pacman-pause-modal"><div class="pacman-pause-icon">⏸</div><h2>ПАУЗА</h2><button class="pacman-pause-resume-btn" id="resumeGameBtn">Продолжить</button></div>`;
+    document.body.appendChild(modal);
+    document.getElementById("resumeGameBtn").onclick=()=>{
+        modal.remove();
+        paused=false;
+        stopPauseSound();
+        startMusic();
+    };
+}
+
+document.getElementById("pacmanPauseBtn").onclick = ()=>{
+    if(!paused){
+        showPauseMenu();
+    }
+};
+
+document.getElementById("pacmanNewGameBtn").onclick = ()=>{
+    stopMusic();
+    stopPauseSound();
+    saveGameStats();
+    location.reload();
+};
+
+function init(){
+    map=getRandomMap();
+    createPlayer();
+    createGhosts();
+    drawMap();
+    updatePositions();
+    updateHUD();
+    setTimeout(()=>{ if(!paused) startMusic(); }, 500);
+}
+init();
+</script>
+</body>
+</html

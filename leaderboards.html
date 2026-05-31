@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Таблица рекордов</title>
+    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .leaderboard-container {
+            max-width: 1400px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        .leaderboard-card {
+            background: var(--project-card-bg);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: var(--box-shadow);
+        }
+        .game-selector {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+            justify-content: center;
+        }
+        .game-btn {
+            padding: 12px 30px;
+            border: 1px solid var(--accent);
+            border-radius: 40px;
+            background: transparent;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        .game-btn.active {
+            background: var(--accent);
+            color: white;
+        }
+        .game-btn:hover {
+            background: var(--accent);
+            color: white;
+            transform: translateY(-2px);
+        }
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .leaderboard-table th,
+        .leaderboard-table td {
+            padding: 15px 20px;
+            text-align: left;
+            border-bottom: 1px solid var(--text-secondary);
+            color: white;
+        }
+        .leaderboard-table th {
+            background: var(--project-card-bg);
+            color: var(--accent);
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        .leaderboard-table tr:hover {
+            background: rgba(92, 98, 236, 0.15);
+        }
+        .leaderboard-table td {
+            color: white;
+            font-size: 1rem;
+        }
+        .rank-1 { color: gold; font-weight: bold; }
+        .rank-2 { color: silver; font-weight: bold; }
+        .rank-3 { color: #cd7f32; font-weight: bold; }
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: white;
+            font-size: 1.1rem;
+        }
+        .error-message {
+            text-align: center;
+            padding: 50px;
+            color: #e74c3c;
+        }
+        .current-user-row {
+            background: rgba(92, 98, 236, 0.25);
+            font-weight: 500;
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: var(--accent);
+            font-size: 2rem;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 25px;
+            color: white;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            color: var(--accent);
+        }
+        .score-value {
+            font-weight: bold;
+            color: #ffffff;
+        }
+        .level-value {
+            font-weight: bold;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="container">
+            <div class="nav-row">
+                <a href="index.html" class="logo"><strong>Shopify</strong> Game</a>
+                <button class="dark-mode-btn">
+                    <img src="img/icons/sun.svg" alt="Light mode" class="dark-mode-btn__icon">
+                    <img src="img/icons/moon.svg" alt="Dark mode" class="dark-mode-btn__icon">
+                </button>
+                <ul class="nav-list">
+                    <li class="nav-list__item"><a href="index.html" class="nav-list__link">Главная</a></li>
+                    <li class="nav-list__item"><a href="leaderboards.html" class="nav-list__link nav-list__link--active">Рекорды</a></li>
+                    <li class="nav-list__item"><a href="contacts.html" class="nav-list__link">Контакты</a></li>
+                    <li class="nav-list__item"><div id="user-info"></div></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="leaderboard-container">
+        <div class="leaderboard-card">
+            <h2><i class="fas fa-trophy"></i> Таблица рекордов</h2>
+
+            <div class="game-selector" id="gameSelector">
+                <button class="game-btn" data-game="snake">🐍 Змейка</button>
+                <button class="game-btn" data-game="dino">🦕 Динозаврик</button>
+                <button class="game-btn" data-game="pacman">👻 PAC-MAN</button>
+                <button class="game-btn" data-game="space">🚀 Космобой</button>
+            </div>
+            <div id="leaderboardContent">
+                <div class="loading">Выберите игру для просмотра рекордов</div>
+            </div>
+
+            <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> На главную</a>
+        </div>
+    </div>
+    <footer class="footer">
+        <div class="container">
+            <div class="footer__wrapper">
+                <ul class="social">
+                    <li class="social__item"><a href="#!"><img src="img/icons/vk.svg" alt="Link"></a></li>
+                    <li class="social__item"><a href="#!"><img src="img/icons/instagram.svg" alt="Link"></a></li>
+                    <li class="social__item"><a href="#!"><img src="img/icons/twitter.svg" alt="Link"></a></li>
+                    <li class="social__item"><a href="#!"><img src="img/icons/gitHub.svg" alt="Link"></a></li>
+                    <li class="social__item"><a href="#!"><img src="img/icons/linkedIn.svg" alt="Link"></a></li>
+                </ul>
+                <div class="copyright"><p>© 2026 IT.Москва</p></div>
+            </div>
+        </div>
+    </footer>
+    <script src="js/main-obf.js"></script>
+    <script>
+        let currentUser = null;
+
+        const user = JSON.parse(localStorage.getItem("user"));
+        const userInfo = document.getElementById("user-info");
+
+        if (user) {
+            currentUser = user;
+            userInfo.innerHTML = `
+                <div class="profile-menu">
+                    <div class="profile-btn" onclick="toggleMenu()">
+                        <img src="${user.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" class="avatar">
+                        <span>${user.name}</span>
+                    </div>
+                    <div class="dropdown-menu" id="dropdown-menu">
+                        <button onclick="window.location.href='index.html'">Профиль</button>
+                        <button onclick="logout()">Выйти</button>
+                    </div>
+                </div>
+            `;
+        } else {
+            userInfo.innerHTML = `<a href="lgpass.html" class="nav-list__link">Войти</a>`;
+        }
+
+        async function logout() {
+            try {
+                await fetch('http://localhost:5000/logout', { method: 'POST', credentials: 'include' });
+            } catch (e) {}
+            localStorage.removeItem("user");
+            window.location.href = "index.html";
+        }
+
+        function toggleMenu() {
+            document.getElementById("dropdown-menu")?.classList.toggle("show-menu");
+        }
+
+        function getUniqueBestScores(records) {
+            const bestByUser = new Map();
+            
+            records.forEach(record => {
+                const userName = record.user?.name || 'Аноним';
+                const scoreValue = record.score;
+                const createdAt = record.createdAt;
+                
+                if (!bestByUser.has(userName) || scoreValue > bestByUser.get(userName).score) {
+                    bestByUser.set(userName, {
+                        userName: userName,
+                        score: scoreValue,
+                        createdAt: createdAt,
+                        userEmail: record.user?.email
+                    });
+                }
+            });
+            
+            let result = Array.from(bestByUser.values());
+            result.sort((a, b) => b.score - a.score);
+            
+            return result;
+        }
+
+        async function loadLeaderboard(game) {
+            const container = document.getElementById('leaderboardContent');
+            container.innerHTML = '<div class="loading">Загрузка рекордов...</div>';
+
+            try {
+                const response = await fetch(`http://localhost:5000/api/leaderboard/${game}`, {
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                let records = await response.json();
+
+                if (!records || records.length === 0) {
+                    container.innerHTML = '<div class="loading">Нет рекордов для этой игры. Будьте первым!</div>';
+                    return;
+                }
+
+                const bestRecords = getUniqueBestScores(records);
+                
+                if (bestRecords.length === 0) {
+                    container.innerHTML = '<div class="loading">Нет рекордов для этой игры</div>';
+                    return;
+                }
+
+                let tableHtml = `
+                    <table class="leaderboard-table">
+                        <thead>
+                            <tr>
+                                <th>Место</th>
+                                <th>Игрок</th>
+                                <th>${game === 'space' ? 'Уровень' : 'Рекорд'}</th>
+                                <th>Дата</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                bestRecords.forEach((record, index) => {
+                    const place = index + 1;
+                    let placeClass = '';
+                    let placeIcon = '';
+                    if (place === 1) {
+                        placeClass = 'rank-1';
+                        placeIcon = ' 👑';
+                    } else if (place === 2) {
+                        placeClass = 'rank-2';
+                        placeIcon = ' 🥈';
+                    } else if (place === 3) {
+                        placeClass = 'rank-3';
+                        placeIcon = ' 🥉';
+                    }
+
+                    const isCurrentUser = currentUser && record.userName === currentUser.name;
+                    const rowClass = isCurrentUser ? 'current-user-row' : '';
+
+                    const date = new Date(record.createdAt);
+                    const formattedDate = `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`;
+                    
+                    const displayValue = game === 'space' 
+                        ? `<span class="level-value">${record.score}</span>`
+                        : `<span class="score-value">${record.score}</span>`;
+
+                    tableHtml += `
+                        <tr class="${rowClass}">
+                            <td class="${placeClass}"><strong>${place}</strong>${placeIcon}</td>
+                            <td>${escapeHtml(record.userName)} ${isCurrentUser ? ' (Вы)' : ''}</td>
+                            <td>${displayValue}</td>
+                            <td>${formattedDate}</td>
+                        </tr>
+                    `;
+                });
+
+                tableHtml += `
+                        </tbody>
+                    </table>
+                `;
+
+                if (currentUser) {
+                    tableHtml += `<p style="margin-top: 20px; font-size: 0.9rem; color: white; text-align: center;">Ваши рекорды выделены цветом</p>`;
+                }
+
+                container.innerHTML = tableHtml;
+
+            } catch (error) {
+                console.error('Ошибка загрузки:', error);
+                container.innerHTML = `
+                    <div class="error-message">
+                        Ошибка загрузки рекордов<br>
+                        <small>Проверьте, запущен ли сервер: http://localhost:5000/</small>
+                    </div>
+                `;
+            }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return 'Аноним';
+            return str.replace(/[&<>]/g, function (m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+
+        document.querySelectorAll('.game-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.game-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const game = btn.dataset.game;
+                loadLeaderboard(game);
+            });
+        });
+
+        setTimeout(() => {
+            const firstGameBtn = document.querySelector('.game-btn');
+            if (firstGameBtn) {
+                firstGameBtn.classList.add('active');
+                loadLeaderboard('snake');
+            }
+        }, 100);
+    </script>
+</body>
+</html>

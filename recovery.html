@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Восстановление пароля</title>
+    <link rel="stylesheet" href="style.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Poppins:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="wrapper">
+        <div id="step1" class="step active">
+            <div class="logo-icon"><i class='bx bx-joystick'></i></div>
+            <h1>Восстановление пароля</h1>
+            <div class="auth-subtitle">Мы отправим код для сброса пароля</div>
+            <div class="input-box">
+                <input type="email" id="email" placeholder="Введите ваш Email" required>
+                <i class='bx bx-envelope input-icon'></i>
+            </div>
+            <button class="btn" id="sendCodeBtn">Отправить код</button>
+            <div id="formMessage1" class="form-message"></div>
+            <div class="register-link">
+                <p><a href="lgpass.html">← Вернуться ко входу</a></p>
+            </div>
+        </div>
+
+        <div id="step2" class="step">
+            <div class="logo-icon"><i class='bx bx-key'></i></div>
+            <h1>Подтверждение кода</h1>
+            <div class="auth-subtitle">Введите код из письма</div>
+            <div class="input-box">
+                <input type="text" id="code" placeholder="Введите код из письма" maxlength="6">
+                <i class='bx bx-key input-icon'></i>
+            </div>
+            <button class="btn" id="verifyCodeBtn">Подтвердить код</button>
+            <div id="formMessage2" class="form-message"></div>
+            <div class="register-link">
+                <p><a href="#" id="backToStep1">← Назад</a></p>
+            </div>
+        </div>
+
+        <div id="step3" class="step">
+            <div class="logo-icon"><i class='bx bx-lock-alt'></i></div>
+            <h1>Новый пароль</h1>
+            <div class="auth-subtitle">Придумайте новый пароль</div>
+            <div class="input-box">
+                <input type="password" id="newPassword" placeholder="Введите новый пароль">
+                <i class='bx bxs-lock-alt input-icon'></i>
+                <i class='bx bx-hide eye-icon' id="togglePassword"></i>
+            </div>
+            <button class="btn" id="resetPasswordBtn">Сбросить пароль</button>
+            <div id="formMessage3" class="form-message"></div>
+            <div class="register-link">
+                <p><a href="#" id="backToStep1FromStep3">← Назад</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentEmail = "";
+        let currentCode = "";
+        let isSending = false;
+        let isResetting = false;
+
+        function showMessage(text, isSuccess = false, step = 1) {
+            let msgBox;
+            if (step === 1) msgBox = document.getElementById("formMessage1");
+            else if (step === 2) msgBox = document.getElementById("formMessage2");
+            else msgBox = document.getElementById("formMessage3");
+            
+            msgBox.textContent = text;
+            if (isSuccess) {
+                msgBox.className = 'form-message success';
+            } else {
+                msgBox.className = 'form-message error';
+            }
+            msgBox.style.display = 'block';
+            setTimeout(() => {
+                msgBox.style.display = 'none';
+            }, 3500);
+        }
+
+        function showStep(stepNumber) {
+            document.getElementById("step1").classList.remove("active");
+            document.getElementById("step2").classList.remove("active");
+            document.getElementById("step3").classList.remove("active");
+            document.getElementById(`step${stepNumber}`).classList.add("active");
+        }
+
+        function goToStep1() {
+            showStep(1);
+            document.getElementById("email").value = "";
+            document.getElementById("code").value = "";
+            document.getElementById("newPassword").value = "";
+            currentEmail = "";
+            currentCode = "";
+            document.getElementById("formMessage1").style.display = "none";
+            document.getElementById("formMessage2").style.display = "none";
+            document.getElementById("formMessage3").style.display = "none";
+        }
+
+        document.getElementById("backToStep1").onclick = function(e) {
+            e.preventDefault();
+            goToStep1();
+        };
+
+        document.getElementById("backToStep1FromStep3").onclick = function(e) {
+            e.preventDefault();
+            goToStep1();
+        };
+
+        const togglePassword = document.getElementById("togglePassword");
+        if (togglePassword) {
+            togglePassword.addEventListener("click", function() {
+                const passwordInput = document.getElementById("newPassword");
+                const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
+                passwordInput.setAttribute("type", type);
+                this.classList.toggle("bx-show");
+                this.classList.toggle("bx-hide");
+            });
+        }
+
+        document.getElementById("sendCodeBtn").onclick = async function() {
+            if (isSending) return;
+            
+            const email = document.getElementById("email").value.trim();
+            
+            if (!email) {
+                showMessage("Введите Email", false, 1);
+                return;
+            }
+            if (!email.includes("@") || !email.includes(".")) {
+                showMessage("Введите корректный email адрес", false, 1);
+                return;
+            }
+
+            currentEmail = email;
+            const sendBtn = document.getElementById("sendCodeBtn");
+            isSending = true;
+            sendBtn.disabled = true;
+            sendBtn.textContent = "Отправка...";
+
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+                const response = await fetch("http://localhost:5000/send-recovery-code", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email: email }),
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
+                const result = await response.json();
+
+                if (response.ok) {
+                    currentCode = result.code;
+                    showMessage("Код отправлен на вашу почту!", true, 1);
+                    showStep(2);
+                } else {
+                    showMessage(result.message || "Пользователь не найден", false, 1);
+                }
+            } catch (error) {
+                let errorText = "Ошибка подключения к серверу";
+                if (error.name === "AbortError") {
+                    errorText = "Сервер не отвечает. Проверьте соединение.";
+                }
+                showMessage(errorText, false, 1);
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.textContent = "Отправить код";
+                isSending = false;
+            }
+        };
+
+        document.getElementById("verifyCodeBtn").onclick = function() {
+            const inputCode = document.getElementById("code").value.trim();
+            
+            if (!inputCode) {
+                showMessage("Введите код из письма", false, 2);
+                return;
+            }
+
+            if (inputCode !== currentCode) {
+                showMessage("Неверный код", false, 2);
+                return;
+            }
+
+            showMessage("Код подтверждён! Введите новый пароль", true, 2);
+            showStep(3);
+        };
+
+        document.getElementById("resetPasswordBtn").onclick = async function() {
+            if (isResetting) return;
+            
+            const newPassword = document.getElementById("newPassword").value;
+            
+            if (!newPassword) {
+                showMessage("Введите новый пароль", false, 3);
+                return;
+            }
+            if (newPassword.length < 6) {
+                showMessage("Пароль должен содержать минимум 6 символов", false, 3);
+                return;
+            }
+
+            const resetBtn = document.getElementById("resetPasswordBtn");
+            isResetting = true;
+            resetBtn.disabled = true;
+            resetBtn.textContent = "Сохранение...";
+
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+                const response = await fetch("http://localhost:5000/reset-password", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email: currentEmail, newPassword: newPassword }),
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
+                const result = await response.json();
+
+                if (response.ok) {
+                    showMessage("Пароль изменён!", true, 3);
+                    setTimeout(() => {
+                        window.location.href = "lgpass.html";
+                    }, 1500);
+                } else {
+                    showMessage(result.message || "Ошибка при смене пароля", false, 3);
+                }
+            } catch (error) {
+                let errorText = "Ошибка подключения к серверу";
+                if (error.name === "AbortError") {
+                    errorText = "Сервер не отвечает. Проверьте соединение.";
+                }
+                showMessage(errorText, false, 3);
+            } finally {
+                resetBtn.disabled = false;
+                resetBtn.textContent = "Сбросить пароль";
+                isResetting = false;
+            }
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Регистрация</title>
+    <link rel="stylesheet" href="style.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Poppins:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="wrapper">
+        <form id="registration-form">
+            <div class="logo-icon"><i class='bx bx-joystick'></i></div>
+            <h1>Регистрация</h1>
+            <div class="auth-subtitle">Создайте аккаунт и начните играть!</div>
+            
+            <div class="input-box">
+                <input type="text" id="name-input" placeholder="Ваше имя" required name="name">
+                <i class='bx bx-user input-icon'></i>
+            </div>
+            
+            <div class="input-box">
+                <input type="email" id="email-input" placeholder="Введите ваш Email" required name="email">
+                <i class='bx bx-envelope input-icon'></i>
+            </div>
+            
+            <div class="input-box">
+                <input type="password" id="password-input" placeholder="Придумайте пароль" required name="password">
+                <i class='bx bxs-lock-alt input-icon'></i>
+                <i class='bx bx-hide eye-icon' id="togglePassword"></i>
+            </div>
+            
+            <div class="input-box">
+                <input type="password" id="confirm-password-input" placeholder="Подтвердите пароль" required>
+                <i class='bx bxs-lock-alt input-icon'></i>
+                <i class='bx bx-hide eye-icon' id="toggleConfirmPassword"></i>
+            </div>
+            
+            <button type="submit" class="btn" id="submitBtn">Зарегистрироваться</button>
+            
+            <div class="register-link">
+                <p>Уже есть аккаунт? <a href="lgpass.html">Войти</a></p>
+            </div>
+        </form>
+    </div>
+    <script>
+        const form = document.getElementById("registration-form");
+        const submitBtn = document.getElementById("submitBtn");
+        const nameInput = document.getElementById("name-input");
+        const emailInput = document.getElementById("email-input");
+        const passwordInput = document.getElementById("password-input");
+        const confirmPasswordInput = document.getElementById("confirm-password-input");
+        let isSubmitting = false;
+
+        const formMessage = document.createElement('div');
+        formMessage.className = 'form-message';
+        submitBtn.parentNode.insertBefore(formMessage, submitBtn.nextSibling);
+
+        function showMessage(message, isSuccess = false) {
+            formMessage.textContent = message;
+            if (isSuccess) {
+                formMessage.className = 'form-message success';
+            } else {
+                formMessage.className = 'form-message error';
+            }
+            formMessage.style.display = 'block';
+            setTimeout(() => {
+                formMessage.style.display = 'none';
+            }, 3500);
+        }
+
+        const togglePassword = document.getElementById("togglePassword");
+        togglePassword.addEventListener("click", function() {
+            const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
+            passwordInput.setAttribute("type", type);
+            this.classList.toggle("bx-show");
+            this.classList.toggle("bx-hide");
+        });
+
+        const toggleConfirmPassword = document.getElementById("toggleConfirmPassword");
+        toggleConfirmPassword.addEventListener("click", function() {
+            const type = confirmPasswordInput.getAttribute("type") === "password" ? "text" : "password";
+            confirmPasswordInput.setAttribute("type", type);
+            this.classList.toggle("bx-show");
+            this.classList.toggle("bx-hide");
+        });
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            if (isSubmitting) return;
+            
+            const name = nameInput.value.trim();
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+
+            if (!name) {
+                showMessage("Введите ваше имя", false);
+                return;
+            }
+            if (!email) {
+                showMessage("Введите Email", false);
+                return;
+            }
+            if (!password) {
+                showMessage("Введите пароль", false);
+                return;
+            }
+            if (!confirmPassword) {
+                showMessage("Подтвердите пароль", false);
+                return;
+            }
+            if (!email.includes("@") || !email.includes(".")) {
+                showMessage("Введите корректный email адрес", false);
+                return;
+            }
+            if (password.length < 6) {
+                showMessage("Пароль должен содержать минимум 6 символов", false);
+                return;
+            }
+            if (password !== confirmPassword) {
+                showMessage("Пароли не совпадают", false);
+                return;
+            }
+
+            isSubmitting = true;
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Регистрация...";
+
+            const data = { name, email, password };
+
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+                const response = await fetch("http://localhost:5000/register", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data),
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
+                const result = await response.json();
+
+                if (response.ok) {
+                    const userData = {
+                        id: result.user?.id || 1,
+                        name: result.user?.name || name,
+                        email: result.user?.email || email,
+                        avatar: result.user?.avatar || null
+                    };
+                    localStorage.setItem("user", JSON.stringify(userData));
+                    
+                    showMessage("Успешно!", true)
+                    setTimeout(() => {
+                        window.location.href = "index.html";
+                    }, 700);
+                } else {
+                    const errorMsg = result.message || "Ошибка регистрации";
+                    showMessage(errorMsg, false);
+                    resetButton(originalText);
+                }
+            } catch (error) {
+                let errorText = "Ошибка подключения к серверу";
+                if (error.name === "AbortError") {
+                    errorText = "Сервер не отвечает. Проверьте соединение.";
+                }
+                showMessage(errorText, false);
+                resetButton(originalText);
+            }
+        });
+
+        function resetButton(originalText) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText || "Зарегистрироваться";
+            isSubmitting = false;
+        }
+    </script>
+</body>
+</html>

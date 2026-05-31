@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Космобой</title>
+    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="game.css">
+    <script src="js/saveScore.js"></script>
+    <style>
+        * { user-select: none; }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="container">
+            <div class="nav-row">
+                <a href="index.html" class="logo"><strong>Shopify</strong> Game</a>
+                <button class="dark-mode-btn">
+                    <img src="img/icons/sun.svg" alt="Light mode" class="dark-mode-btn__icon">
+                    <img src="img/icons/moon.svg" alt="Dark mode" class="dark-mode-btn__icon">
+                </button>
+                <ul class="nav-list">
+                    <li class="nav-list__item"><a href="index.html" class="nav-list__link">Главная</a></li>
+                    <li class="nav-list__item"><a href="contacts.html" class="nav-list__link">Контакты</a></li>
+                    <li class="nav-list__item"><div id="user-info"></div></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <section class="game-section">
+        <div class="game-container-custom">
+            <div id="game-content"></div>
+        </div>
+    </section>
+    <footer class="footer">
+        <div class="container">
+            <div class="footer__wrapper">
+                <ul class="social">
+                    <li class="social__item"><a href="#!"><img src="img/icons/vk.svg" alt="Link"></a></li>
+                    <li class="social__item"><a href="#!"><img src="img/icons/instagram.svg" alt="Link"></a></li>
+                    <li class="social__item"><a href="#!"><img src="img/icons/twitter.svg" alt="Link"></a></li>
+                    <li class="social__item"><a href="#!"><img src="img/icons/gitHub.svg" alt="Link"></a></li>
+                    <li class="social__item"><a href="#!"><img src="img/icons/linkedIn.svg" alt="Link"></a></li>
+                </ul>
+                <div class="copyright">
+                    <p>© 2026 IT.Москва</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <script src="js/main-obf.js"></script>
+    <script>
+        const IMAGES = {
+            player: null, enemySmall: null, enemyMedium: null,
+            boss1: null, boss2: null, boss3: null, boss4: null, boss5: null
+        };
+        
+        function loadImg(url) { const img = new Image(); img.src = url; return img; }
+        
+        IMAGES.player = loadImg('assets/player.png');
+        IMAGES.enemySmall = loadImg('assets/enemy_small.png');
+        IMAGES.enemyMedium = loadImg('assets/enemy_medium.png');
+        IMAGES.boss1 = loadImg('assets/boss1.png');
+        IMAGES.boss2 = loadImg('assets/boss2.png');
+        IMAGES.boss3 = loadImg('assets/boss3.png');
+        IMAGES.boss4 = loadImg('assets/boss4.png');
+        IMAGES.boss5 = loadImg('assets/boss5.png');
+        
+        let currentUser = null;
+        let game = null;
+        
+        function checkAuth() {
+            const user = JSON.parse(localStorage.getItem("user"));
+            if (user) { currentUser = user; return true; }
+            return false;
+        }
+        
+        function redirectToLogin() { window.location.href = 'lgpass.html'; }
+        
+        function updateUserUI() {
+            const user = currentUser;
+            const userInfo = document.getElementById("user-info");
+            if (userInfo) {
+                if (user) {
+                    const avatarUrl = user.avatar || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+                    userInfo.innerHTML = `
+                        <div class="profile-menu">
+                            <div class="profile-btn" onclick="toggleMenu()">
+                                <img src="${avatarUrl}" class="avatar">
+                                <span>${user.name}</span>
+                            </div>
+                            <div class="dropdown-menu" id="dropdown-menu">
+                                <button onclick="logout()">Выйти</button>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    userInfo.innerHTML = `<a href="lgpass.html" class="nav-list__link">Войти</a>`;
+                }
+            }
+        }
+        
+        function logout() { localStorage.removeItem("user"); window.location.href = 'lgpass.html'; }
+        function toggleMenu() { document.getElementById("dropdown-menu")?.classList.toggle("show-menu"); }
+        
+        let shipPower = 1, shipSize = 1, playerCoins = 0, playerLevel = 1, playerKills = 0, playerBossCount = 0;
+        let gameStartTime = null;
+        
+        function loadGameData() {
+            if (!currentUser) return;
+            const saved = localStorage.getItem(`space_battle_${currentUser.name}`);
+            if (saved) {
+                const data = JSON.parse(saved);
+                shipPower = data.power || 1;
+                shipSize = data.size || 1;
+                playerCoins = data.coins || 0;
+                playerLevel = data.level || 1;
+                playerKills = data.kills || 0;
+                playerBossCount = data.bossCount || 0;
+            }
+        }
+        
+        function saveGameData() {
+            if (!currentUser) return;
+            let playTime = 0;
+            if (gameStartTime) playTime = Math.floor((Date.now() - gameStartTime) / 60000);
+            const existing = localStorage.getItem(`space_battle_${currentUser.name}`);
+            let oldTime = 0;
+            if (existing) { try { const old = JSON.parse(existing); oldTime = old.playTime || 0; } catch(e) {} }
+            localStorage.setItem(`space_battle_${currentUser.name}`, JSON.stringify({
+                coins: playerCoins, level: playerLevel, kills: playerKills, bossCount: playerBossCount,
+                power: shipPower, size: shipSize, playTime: oldTime + playTime
+            }));
+        }
+        
+        function resetAllProgress() {
+            if (!confirm('Сбросить весь прогресс?')) return;
+            shipPower = 1; shipSize = 1; playerCoins = 0; playerLevel = 1; playerKills = 0; playerBossCount = 0;
+            if (currentUser) localStorage.removeItem(`space_battle_${currentUser.name}`);
+            location.reload();
+        }
+        
+        function openShop() {
+            const modal = document.createElement('div');
+            modal.className = 'shop-modal';
+            modal.style.display = 'flex';
+            modal.innerHTML = `
+                <div class="shop-box">
+                    <h2>Космический магазин</h2>
+                    <div class="shop-coins">Монет: ${playerCoins}</div>
+                    <div class="shop-item"><div class="shop-item-info"><div class="shop-item-name">Улучшение мощности</div><div class="shop-item-desc">Увеличивает урон +100 (текущий: ${shipPower}/10)</div></div><div><div class="shop-item-price">${5000 + shipPower * 1000} монет</div><button class="shop-buy-btn" onclick="buyPower()">Купить</button></div></div>
+                    <div class="shop-item"><div class="shop-item-info"><div class="shop-item-name">Улучшение корпуса</div><div class="shop-item-desc">Увеличивает размер и HP корабля (текущий: ${shipSize}/10)</div></div><div><div class="shop-item-price">${10000 + shipSize * 2000} монет</div><button class="shop-buy-btn" onclick="buySize()">Купить</button></div></div>
+                    <button class="game-btn" onclick="this.parentElement.parentElement.remove()">Закрыть</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        
+        function buyPower() {
+            if (shipPower >= 10) { alert('Максимальный уровень!'); return; }
+            const price = 5000 + shipPower * 1000;
+            if (playerCoins >= price) {
+                playerCoins -= price;
+                shipPower++;
+                if (game) { game.damage = 100 + (shipPower - 1) * 100; game.coins = playerCoins; game.updateHUD(); }
+                saveGameData();
+                alert(`Мощность ${shipPower}/10! Урон: ${game?.damage || 100}`);
+                document.querySelector('.shop-modal')?.remove();
+                openShop();
+            } else { alert('Недостаточно монет!'); }
+        }
+        
+        function buySize() {
+            if (shipSize >= 10) { alert('Максимальный уровень!'); return; }
+            const price = 10000 + shipSize * 2000;
+            if (playerCoins >= price) {
+                playerCoins -= price;
+                shipSize++;
+                if (game) { game.coins = playerCoins; game.updateHUD(); }
+                saveGameData();
+                alert(`Корпус ${shipSize}/10! Корабль увеличен.`);
+                document.querySelector('.shop-modal')?.remove();
+                openShop();
+            } else { alert('Недостаточно монет!'); }
+        }
+        
+        window.buyPower = buyPower;
+        window.buySize = buySize;
+        window.openShop = openShop;
+        window.resetAllProgress = resetAllProgress;
+        
+        class SpaceBattleGame {
+            constructor(canvas, ctx, hud) {
+                this.lastUpdate = 0;
+                this.canvas = canvas;
+                this.ctx = ctx;
+                this.hud = hud;
+                this.gameStartTime = Date.now();
+                
+                this.coins = playerCoins;
+                this.level = playerLevel;
+                this.killsThisWave = playerKills;
+                this.bossCount = playerBossCount;
+                this.maxLevel = 50;
+                this.killsToBoss = Math.max(5, 15 - Math.floor(this.level / 5));
+                this.isBossWave = false;
+                
+                this.playerMaxHp = 800 + (this.level - 1) * 80 + (shipSize - 1) * 100;
+                this.shipSize = 35 + (shipSize - 1) * 4;
+                
+                this.player = {
+                    x: canvas.width / 2 - this.shipSize/2,
+                    y: canvas.height - 80,
+                    width: this.shipSize,
+                    height: this.shipSize,
+                    hp: this.playerMaxHp,
+                    maxHp: this.playerMaxHp
+                };
+                
+                this.bullets = [];
+                this.enemyBullets = [];
+                this.enemies = [];
+                this.boss = null;
+                this.bossLasers = [];
+                this.bossFireballs = [];
+                this.particles = [];
+                
+                this.damage = 100 + (shipPower - 1) * 100;
+                this.bulletCooldown = 0;
+                this.bulletCooldownMax = 8;
+                
+                this.ammo = 30;
+                this.maxAmmo = 30;
+                this.ammoRegenTimer = 0;
+                this.ammoRegenDelay = 60;
+                
+                this.gameRunning = true;
+                this.paused = false;
+                
+                this.moveUp = false; this.moveDown = false; this.moveLeft = false; this.moveRight = false;
+                this.mouseX = canvas.width/2; this.mouseY = canvas.height/2;
+                this.mouseDown = false;
+                this.spawnTimer = 0;
+                
+                this.stars = [];
+                for (let i = 0; i < 150; i++) {
+                    this.stars.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, size: Math.random() * 2 });
+                }
+                
+                this.setupControls();
+                this.updateHUD();
+                this.start();
+            }
+            
+            setupControls() {
+                const handleKeyDown = (e) => {
+                    const key = e.key;
+                    if (key === 'ArrowUp' || key === 'w' || key === 'W') { this.moveUp = true; e.preventDefault(); }
+                    if (key === 'ArrowDown' || key === 's' || key === 'S') { this.moveDown = true; e.preventDefault(); }
+                    if (key === 'ArrowLeft' || key === 'a' || key === 'A') { this.moveLeft = true; e.preventDefault(); }
+                    if (key === 'ArrowRight' || key === 'd' || key === 'D') { this.moveRight = true; e.preventDefault(); }
+                };
+                const handleKeyUp = (e) => {
+                    const key = e.key;
+                    if (key === 'ArrowUp' || key === 'w' || key === 'W') { this.moveUp = false; e.preventDefault(); }
+                    if (key === 'ArrowDown' || key === 's' || key === 'S') { this.moveDown = false; e.preventDefault(); }
+                    if (key === 'ArrowLeft' || key === 'a' || key === 'A') { this.moveLeft = false; e.preventDefault(); }
+                    if (key === 'ArrowRight' || key === 'd' || key === 'D') { this.moveRight = false; e.preventDefault(); }
+                };
+                window.addEventListener('keydown', handleKeyDown);
+                window.addEventListener('keyup', handleKeyUp);
+                
+                this.canvas.addEventListener('mousemove', (e) => {
+                    const rect = this.canvas.getBoundingClientRect();
+                    const scaleX = this.canvas.width / rect.width;
+                    const scaleY = this.canvas.height / rect.height;
+                    this.mouseX = (e.clientX - rect.left) * scaleX;
+                    this.mouseY = (e.clientY - rect.top) * scaleY;
+                });
+                this.canvas.addEventListener('mousedown', (e) => { e.preventDefault(); this.mouseDown = true; });
+                window.addEventListener('mouseup', () => { this.mouseDown = false; });
+                this.keyDownHandler = handleKeyDown;
+                this.keyUpHandler = handleKeyUp;
+            }
+            
+            getDifficultyMultiplier() {
+                return 1 + (this.level - 1) * 0.08;
+            }
+            
+            getBossType(bossNum) {
+                const cycleIndex = ((bossNum - 1) % 5) + 1;
+                const types = {
+                    1: { name: 'Лазерный', img: 'boss1', baseSize: 90, baseHp: 2000, laserWidth: 14, laserDamage: 100, fireballSize: 22, fireballDamage: 40 },
+                    2: { name: 'Пушечный', img: 'boss2', baseSize: 105, baseHp: 2500, laserWidth: 18, laserDamage: 120, fireballSize: 26, fireballDamage: 50 },
+                    3: { name: 'Ракетный', img: 'boss3', baseSize: 120, baseHp: 3000, laserWidth: 22, laserDamage: 140, fireballSize: 30, fireballDamage: 60 },
+                    4: { name: 'Огненный', img: 'boss4', baseSize: 135, baseHp: 3800, laserWidth: 26, laserDamage: 160, fireballSize: 34, fireballDamage: 70 },
+                    5: { name: 'Элитный', img: 'boss5', baseSize: 150, baseHp: 4800, laserWidth: 30, laserDamage: 180, fireballSize: 38, fireballDamage: 80 }
+                };
+                const type = types[cycleIndex];
+                const cycle = Math.floor((bossNum - 1) / 5);
+                const mult = this.getDifficultyMultiplier();
+                const bonusHp = Math.floor(cycle * 1500 * mult);
+                const bonusSize = cycle * 3;
+                return {
+                    name: type.name, img: type.img,
+                    size: type.baseSize + bonusSize,
+                    hp: Math.floor(type.baseHp + bonusHp),
+                    laserWidth: type.laserWidth, laserDamage: Math.floor(type.laserDamage + cycle * 25),
+                    fireballSize: type.fireballSize + cycle * 3, fireballDamage: Math.floor(type.fireballDamage + cycle * 12),
+                    hasLaser: true, hasBullets: cycleIndex >= 2, hasFireballs: cycleIndex >= 4
+                };
+            }
+            
+            spawnEnemy() {
+                const mult = this.getDifficultyMultiplier();
+                const type = Math.random() < 0.6
+                    ? { hp: Math.floor(80 * mult), width: 32, height: 32, points: 15, damage: Math.floor(12 * mult), name: 'small', speed: 2.2 }
+                    : { hp: Math.floor(350 * mult), width: 48, height: 48, points: 40, damage: Math.floor(22 * mult), name: 'medium', speed: 1.6 };
+                this.enemies.push({
+                    x: Math.random() * (this.canvas.width - type.width), y: -type.height,
+                    width: type.width, height: type.height, hp: type.hp, maxHp: type.hp,
+                    points: type.points, damage: type.damage, name: type.name, speed: type.speed,
+                    shootTimer: Math.floor(Math.random() * 40 + 20), shootDelay: 45
+                });
+            }
+            
+            spawnBoss() {
+                const bossNum = this.bossCount + 1;
+                const bossType = this.getBossType(bossNum);
+                this.boss = {
+                    x: this.canvas.width / 2 - bossType.size/2, y: 40,
+                    width: bossType.size, height: bossType.size + 15,
+                    hp: bossType.hp, maxHp: bossType.hp,
+                    laserCooldown: 0, bulletCooldown: 0, fireballCooldown: 0,
+                    count: this.bossCount, type: bossType
+                };
+                this.isBossWave = true;
+                this.enemies = [];
+                const wrapper = document.querySelector('.canvas-wrapper');
+                if (wrapper) { wrapper.classList.add('shake'); setTimeout(() => wrapper.classList.remove('shake'), 1000); }
+            }
+            
+            shoot() {
+                if (this.bulletCooldown <= 0 && this.gameRunning && !this.paused && this.mouseDown && this.ammo > 0) {
+                    const dx = this.mouseX - (this.player.x + this.player.width/2);
+                    const dy = this.mouseY - (this.player.y + this.player.height/2);
+                    const len = Math.sqrt(dx * dx + dy * dy);
+                    const vx = len === 0 ? 0 : dx / len * 12;
+                    const vy = len === 0 ? 1 : dy / len * 12;
+                    this.bullets.push({
+                        x: this.player.x + this.player.width/2 - 4, y: this.player.y - 5,
+                        width: 8, height: 15, damage: this.damage, vx: vx, vy: vy
+                    });
+                    this.bulletCooldown = this.bulletCooldownMax;
+                    this.ammo--;
+                    this.updateAmmoDisplay();
+                    
+                    const attackSound = new Audio('assets/attack.mp3');
+                    attackSound.volume = 0.3;
+                    attackSound.play().catch(e => console.log("Attack sound error"));
+                }
+            }
+            
+            updateAmmoDisplay() {
+                const ammoFill = document.getElementById('ammoFill');
+                if (ammoFill) ammoFill.style.width = `${(this.ammo / this.maxAmmo) * 100}%`;
+            }
+            
+            update() {
+                const now = Date.now();
+                if (this.lastUpdate && now - this.lastUpdate < 16) return;
+                this.lastUpdate = now;
+                if (!this.gameRunning || this.paused) return;
+                
+                if (this.bulletCooldown > 0) this.bulletCooldown--;
+                
+                if (this.ammoRegenTimer <= 0 && this.ammo < this.maxAmmo) {
+                    this.ammo = Math.min(this.maxAmmo, this.ammo + 1);
+                    this.updateAmmoDisplay();
+                    this.ammoRegenTimer = this.ammoRegenDelay;
+                } else if (this.ammoRegenTimer > 0) {
+                    this.ammoRegenTimer--;
+                }
+                
+                let speed = 6;
+                if (this.moveLeft) this.player.x = Math.max(0, this.player.x - speed);
+                if (this.moveRight) this.player.x = Math.min(this.canvas.width - this.player.width, this.player.x + speed);
+                if (this.moveUp) this.player.y = Math.max(30, this.player.y - speed);
+                if (this.moveDown) this.player.y = Math.min(this.canvas.height - this.player.height, this.player.y + speed);
+                
+                this.shoot();
+                
+                for (let i = 0; i < this.bullets.length; i++) {
+                    this.bullets[i].x += this.bullets[i].vx;
+                    this.bullets[i].y += this.bullets[i].vy;
+                    if (this.bullets[i].y + this.bullets[i].height < -50 || this.bullets[i].y > this.canvas.height + 50 ||
+                        this.bullets[i].x + this.bullets[i].width < -50 || this.bullets[i].x > this.canvas.width + 50) {
+                        this.bullets.splice(i,1); i--;
+                    }
+                }
+                
+                for (let i = 0; i < this.enemies.length; i++) {
+                    const e = this.enemies[i];
+                    const dx = (this.player.x + this.player.width/2) - (e.x + e.width/2);
+                    const dy = (this.player.y + this.player.height/2) - (e.y + e.height/2);
+                    const len = Math.sqrt(dx*dx + dy*dy);
+                    if (len > 0.1) { e.x += (dx / len) * e.speed; e.y += (dy / len) * e.speed; }
+                    e.x = Math.max(0, Math.min(this.canvas.width - e.width, e.x));
+                    e.y = Math.max(-e.height, Math.min(this.canvas.height, e.y));
+                    
+                    e.shootTimer--;
+                    if (e.shootTimer <= 0 && e.y > 0 && e.y < this.canvas.height) {
+                        const bulletDx = (this.player.x + this.player.width/2) - (e.x + e.width/2);
+                        const bulletDy = (this.player.y + this.player.height/2) - (e.y + e.height);
+                        const bulletLen = Math.sqrt(bulletDx*bulletDx + bulletDy*bulletDy);
+                        const bulletVx = bulletDx / bulletLen * 7;
+                        const bulletVy = bulletDy / bulletLen * 7;
+                        this.enemyBullets.push({
+                            x: e.x + e.width/2 - 3, y: e.y + e.height,
+                            width: 6, height: 10, damage: e.damage, vx: bulletVx, vy: bulletVy
+                        });
+                        e.shootTimer = e.shootDelay;
+                        
+                        const enemySound = new Audio('assets/attack2.mp3');
+                        enemySound.volume = 0.25;
+                        enemySound.play().catch(e => console.log("Enemy attack sound error"));
+                    }
+                    
+                    if (this.checkCollision(this.player, e)) {
+                        this.player.hp -= e.damage;
+                        this.createExplosion(e.x + e.width/2, e.y + e.height/2);
+                        this.enemies.splice(i,1); i--;
+                        this.updateHUD();
+                        if (this.player.hp <= 0) this.gameOver();
+                        saveGameResult('space', playerLevel);
+                        continue;
+                    }
+                    
+                    for (let j = 0; j < this.bullets.length; j++) {
+                        if (this.checkCollision(this.bullets[j], e)) {
+                            e.hp -= this.bullets[j].damage;
+                            this.bullets.splice(j,1); j--;
+                            if (e.hp <= 0) {
+                                this.killsThisWave++;
+                                this.coins += e.points;
+                                this.createExplosion(e.x + e.width/2, e.y + e.height/2);
+                                this.enemies.splice(i,1); i--;
+                                this.updateHUD();
+                                playerCoins = this.coins;
+                                playerKills = this.killsThisWave;
+                                saveGameData();
+                                if (this.killsThisWave >= this.killsToBoss && !this.isBossWave && this.level < this.maxLevel) {
+                                    this.bossCount++;
+                                    playerBossCount = this.bossCount;
+                                    this.spawnBoss();
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                for (let i = 0; i < this.enemyBullets.length; i++) {
+                    const b = this.enemyBullets[i];
+                    b.x += b.vx; b.y += b.vy;
+                    if (this.checkCollision(this.player, b)) {
+                        this.player.hp -= b.damage;
+                        this.enemyBullets.splice(i,1); i--;
+                        this.updateHUD();
+                        if (this.player.hp <= 0) this.gameOver();
+                    } else if (b.y > this.canvas.height + 100 || b.x < -100 || b.x > this.canvas.width + 100) {
+                        this.enemyBullets.splice(i,1); i--;
+                    }
+                }
+                
+                if (!this.isBossWave && this.enemies.length < 6 && this.spawnTimer <= 0 && this.level < this.maxLevel) {
+                    this.spawnEnemy();
+                    this.spawnTimer = Math.max(20, 50 - Math.floor(this.level / 2));
+                } else if (this.spawnTimer > 0) { this.spawnTimer--; }
+                
+                if (this.isBossWave && this.boss) { this.updateBoss(); }
+                
+                for (let i = 0; i < this.particles.length; i++) {
+                    this.particles[i].life--;
+                    if (this.particles[i].life <= 0) { this.particles.splice(i,1); i--; }
+                    else { this.particles[i].x += this.particles[i].vx; this.particles[i].y += this.particles[i].vy; }
+                }
+                
+                if (this.level >= this.maxLevel && !this.isBossWave && this.enemies.length === 0 && !this.boss) {
+                    this.gameRunning = false;
+                    alert('Поздравляем! Вы прошли игру!');
+                    this.exitGame();
+                }
+                
+                this.render();
+            }
+            
+            updateBoss() {
+                const boss = this.boss;
+                const bossType = boss.type;
+                const playerCenterX = this.player.x + this.player.width/2;
+                const targetX = playerCenterX - boss.width/2;
+                const speed = 1.8;
+                if (boss.x < targetX - 3) boss.x += speed;
+                if (boss.x > targetX + 3) boss.x -= speed;
+                boss.x = Math.max(10, Math.min(this.canvas.width - boss.width - 10, boss.x));
+                
+                if (this.checkCollision(this.player, boss)) {
+                    this.player.hp -= 50;
+                    this.updateHUD();
+                    if (this.player.hp <= 0) this.gameOver();
+                }
+                
+                for (let j = 0; j < this.bullets.length; j++) {
+                    if (this.checkCollision(this.bullets[j], boss)) {
+                        boss.hp -= this.bullets[j].damage;
+                        this.bullets.splice(j,1); j--;
+                        if (boss.hp <= 0) {
+                            this.coins += 500 * (boss.count + 1);
+                            this.createExplosion(boss.x + boss.width/2, boss.y + boss.height/2, true);
+                            this.boss = null;
+                            this.isBossWave = false;
+                            this.killsThisWave = 0;
+                            this.level++;
+                            playerLevel = this.level;
+                            this.playerMaxHp = 800 + (this.level - 1) * 80 + (shipSize - 1) * 100;
+                            this.player.maxHp = this.playerMaxHp;
+                            this.player.hp = this.playerMaxHp;
+                            playerCoins = this.coins;
+                            playerKills = this.killsThisWave;
+                            this.killsToBoss = Math.max(5, 15 - Math.floor(this.level / 5));
+                            saveGameData();
+                            this.updateHUD();
+                        }
+                        this.updateHUD();
+                        break;
+                    }
+                }
+                
+                if (bossType.hasLaser && boss.laserCooldown <= 0 && boss.hp > 0) {
+                    this.bossLasers.push({ x: boss.x + boss.width/2 - bossType.laserWidth/2, warning: true, timer: 35, width: bossType.laserWidth, damage: bossType.laserDamage });
+                    boss.laserCooldown = 100;
+                    
+                    const laserSound = new Audio('assets/attack3.mp3');
+                    laserSound.volume = 0.35;
+                    laserSound.play().catch(e => console.log("Laser sound error"));
+                } else if (boss.laserCooldown > 0) { boss.laserCooldown--; }
+                
+                if (bossType.hasBullets && boss.bulletCooldown <= 0 && boss.hp > 0) {
+                    for (let i = -1; i <= 1; i++) {
+                        this.enemyBullets.push({
+                            x: boss.x + boss.width/2 - 3, y: boss.y + boss.height,
+                            width: 6, height: 10, damage: 30 + Math.floor(this.bossCount / 3) * 5,
+                            vx: i * 2.8, vy: 7
+                        });
+                    }
+                    boss.bulletCooldown = 45;
+                    
+                    const bulletSound = new Audio('assets/attack2.mp3');
+                    bulletSound.volume = 0.3;
+                    bulletSound.play().catch(e => console.log("Boss bullet sound error"));
+                } else if (boss.bulletCooldown > 0) { boss.bulletCooldown--; }
+                
+                if (bossType.hasFireballs && boss.fireballCooldown <= 0 && boss.hp > 0) {
+                    const dx = this.player.x + this.player.width/2 - (boss.x + boss.width/2);
+                    const dy = this.player.y + this.player.height/2 - (boss.y + boss.height);
+                    const len = Math.sqrt(dx*dx + dy*dy);
+                    const vx = dx / len * 5.5;
+                    const vy = dy / len * 5.5;
+                    this.bossFireballs.push({
+                        x: boss.x + boss.width/2 - bossType.fireballSize/2, y: boss.y + boss.height,
+                        width: bossType.fireballSize, height: bossType.fireballSize,
+                        damage: bossType.fireballDamage, vx: vx, vy: vy, life: 200
+                    });
+                    boss.fireballCooldown = 65;
+                    
+                    const fireballSound = new Audio('assets/attack3.mp3');
+                    fireballSound.volume = 0.3;
+                    fireballSound.play().catch(e => console.log("Fireball sound error"));
+                } else if (boss.fireballCooldown > 0) { boss.fireballCooldown--; }
+                
+                for (let i = 0; i < this.bossLasers.length; i++) {
+                    const laser = this.bossLasers[i];
+                    laser.timer--;
+                    if (laser.timer <= 0) { this.bossLasers.splice(i,1); i--; }
+                    else if (laser.timer < 25 && laser.warning) {
+                        laser.warning = false;
+                        if (this.player.x + this.player.width > laser.x - 10 && this.player.x < laser.x + laser.width) {
+                            this.player.hp -= laser.damage;
+                            this.updateHUD();
+                            if (this.player.hp <= 0) this.gameOver();
+                        }
+                    }
+                }
+                
+                for (let i = 0; i < this.bossFireballs.length; i++) {
+                    const fb = this.bossFireballs[i];
+                    fb.x += fb.vx; fb.y += fb.vy; fb.life--;
+                    if (this.checkCollision(this.player, fb)) {
+                        this.player.hp -= fb.damage;
+                        this.bossFireballs.splice(i,1); i--;
+                        this.updateHUD();
+                        if (this.player.hp <= 0) this.gameOver();
+                    } else if (fb.y > this.canvas.height + 200 || fb.x < -200 || fb.x > this.canvas.width + 200 || fb.life <= 0) {
+                        this.bossFireballs.splice(i,1); i--;
+                    }
+                }
+            }
+            
+            checkCollision(a,b) {
+                return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
+            }
+            
+            createExplosion(x, y, isBig = false) {
+                const count = isBig ? 30 : 12;
+                for (let i = 0; i < count; i++) {
+                    this.particles.push({ x, y, vx: (Math.random() - 0.5) * 5, vy: (Math.random() - 0.5) * 5, life: 25, size: isBig ? 4 : 2 });
+                }
+            }
+            
+            gameOver() {
+                this.gameRunning = false;
+                saveGameData();
+                const modal = document.createElement('div');
+                modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);display:flex;justify-content:center;align-items:center;z-index:10002;';
+                modal.innerHTML = `<div style="background:#1a1a2e; border-radius:30px; padding:40px; text-align:center; border:2px solid #aa2e2e;">
+                    <h2 style="color:#aa2e2e;">ПОРАЖЕНИЕ</h2><div style="color:white; margin:15px 0;">Уровень: ${this.level}</div>
+                    <div style="color:#ffcc00; margin:15px 0;">Монет: ${this.coins}</div>
+                    <button onclick="location.reload()" style="background:var(--accent); border:none; padding:12px 30px; border-radius:40px; color:white; cursor:pointer;">Играть снова</button>
+                </div>`;
+                document.body.appendChild(modal);
+            }
+            
+            pauseGame() {
+                this.paused = !this.paused;
+                const btn = document.getElementById('pauseBtn');
+                if (btn) btn.textContent = this.paused ? 'Продолжить' : 'Пауза';
+                const wrapper = document.querySelector('.canvas-wrapper');
+                const existing = document.querySelector('.pause-overlay');
+                if (existing) existing.remove();
+                if (this.paused && wrapper) {
+                    const overlay = document.createElement('div');
+                    overlay.className = 'pause-overlay';
+                    overlay.innerHTML = '<div class="pause-text">ПАУЗА</div>';
+                    wrapper.appendChild(overlay);
+                }
+            }
+            
+            exitGame() {
+                if (confirm('Выйти из игры?')) { saveGameData(); window.location.href = 'index.html'; }
+            }
+            
+            updateHUD() {
+                if (!this.hud) return;
+                const hpPercent = (this.player.hp / this.player.maxHp) * 100;
+                this.hud.playerHealthFill.style.width = `${Math.max(0, hpPercent)}%`;
+                this.hud.playerHpText.textContent = `${Math.floor(this.player.hp)}/${this.player.maxHp}`;
+                this.hud.coinsSpan.textContent = this.coins;
+                this.hud.levelSpan.textContent = `${this.level}/${this.maxLevel}`;
+                const progressPercent = (this.killsThisWave / this.killsToBoss) * 100;
+                this.hud.bossProgressFill.style.width = `${Math.min(100, progressPercent)}%`;
+                this.hud.bossProgressText.textContent = `${this.killsThisWave}/${this.killsToBoss}`;
+                
+                if (this.boss && this.hud.bossContainer) {
+                    this.hud.bossContainer.style.display = 'block';
+                    const bossHpPercent = (this.boss.hp / this.boss.maxHp) * 100;
+                    this.hud.bossHealthFill.style.width = `${Math.max(0, bossHpPercent)}%`;
+                    this.hud.bossHpText.textContent = `${Math.floor(this.boss.hp)}/${this.boss.maxHp}`;
+                    this.hud.bossLevelText.textContent = this.boss.count + 1;
+                } else if (this.hud.bossContainer) {
+                    this.hud.bossContainer.style.display = 'none';
+                }
+                this.updateAmmoDisplay();
+            }
+            
+            drawHealthBar(x, y, width, height, currentHp, maxHp) {
+                const percent = (currentHp / maxHp) * 100;
+                this.ctx.fillStyle = '#330000';
+                this.ctx.fillRect(x, y, width, height);
+                this.ctx.fillStyle = '#00ff44';
+                this.ctx.fillRect(x, y, width * (percent / 100), height);
+            }
+            
+            drawRoundedRect(x, y, w, h, r, color) {
+                this.ctx.fillStyle = color;
+                this.ctx.beginPath();
+                this.ctx.moveTo(x+r, y);
+                this.ctx.lineTo(x+w-r, y);
+                this.ctx.quadraticCurveTo(x+w, y, x+w, y+r);
+                this.ctx.lineTo(x+w, y+h-r);
+                this.ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+                this.ctx.lineTo(x+r, y+h);
+                this.ctx.quadraticCurveTo(x, y+h, x, y+h-r);
+                this.ctx.lineTo(x, y+r);
+                this.ctx.quadraticCurveTo(x, y, x+r, y);
+                this.ctx.closePath();
+                this.ctx.fill();
+            }
+            
+            render() {
+                this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);
+                for (let star of this.stars) {
+                    this.ctx.fillStyle = `rgba(255,255,255,${0.3 + Math.sin(Date.now()/1000)*0.2})`;
+                    this.ctx.fillRect(star.x, (star.y + this.level) % this.canvas.height, star.size, star.size);
+                }
+                
+                if (IMAGES.player && IMAGES.player.complete && IMAGES.player.naturalWidth > 0) {
+                    this.ctx.drawImage(IMAGES.player, this.player.x, this.player.y, this.player.width, this.player.height);
+                } else {
+                    this.ctx.fillStyle = '#00ccff';
+                    this.ctx.fillRect(this.player.x, this.player.y, this.player.width, this.player.height);
+                }
+                
+                for (let bullet of this.bullets) { this.ctx.fillStyle = '#ffff00'; this.ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height); }
+                for (let enemy of this.enemies) {
+                    let img = enemy.name === 'small' ? IMAGES.enemySmall : IMAGES.enemyMedium;
+                    if (img && img.complete && img.naturalWidth > 0) { this.ctx.drawImage(img, enemy.x, enemy.y, enemy.width, enemy.height); }
+                    else { this.ctx.fillStyle = enemy.name === 'small' ? '#ff4444' : '#ff6600'; this.ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height); }
+                    this.drawHealthBar(enemy.x, enemy.y-10, enemy.width, 5, enemy.hp, enemy.maxHp);
+                }
+                for (let bullet of this.enemyBullets) { this.ctx.fillStyle = '#ff4444'; this.ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height); }
+                
+                if (this.boss) {
+                    const bossImg = IMAGES[this.boss.type.img];
+                    if (bossImg && bossImg.complete && bossImg.naturalWidth > 0) { this.ctx.drawImage(bossImg, this.boss.x, this.boss.y, this.boss.width, this.boss.height); }
+                    else { this.ctx.fillStyle = '#9900ff'; this.ctx.fillRect(this.boss.x, this.boss.y, this.boss.width, this.boss.height); }
+                    this.ctx.fillStyle = '#ffffff';
+                    this.ctx.font = 'bold 14px monospace';
+                    this.ctx.fillText(`${this.boss.type.name} БОСС УР.${this.boss.count+1}`, this.boss.x+10, this.boss.y-8);
+                    this.drawHealthBar(this.boss.x, this.boss.y-8, this.boss.width, 8, this.boss.hp, this.boss.maxHp);
+                    for (let laser of this.bossLasers) {
+                        const color = laser.warning ? 'rgba(255,0,0,0.4)' : '#ff0000';
+                        this.drawRoundedRect(laser.x, this.boss.y+this.boss.height, laser.width, this.canvas.height, 8, color);
+                    }
+                }
+                
+                for (let fb of this.bossFireballs) {
+                    this.ctx.fillStyle = '#ff6600';
+                    this.ctx.shadowBlur = 10;
+                    this.ctx.beginPath();
+                    this.ctx.arc(fb.x+fb.width/2, fb.y+fb.height/2, fb.width/2, 0, Math.PI*2);
+                    this.ctx.fill();
+                }
+                
+                for (let p of this.particles) {
+                    this.ctx.fillStyle = `rgba(255, ${100 + Math.random()*155}, 0, ${p.life/25})`;
+                    this.ctx.fillRect(p.x, p.y, p.size, p.size);
+                }
+                this.ctx.shadowBlur = 0;
+                
+                this.ctx.font = 'bold 14px monospace';
+                this.ctx.fillStyle = '#ffcc00';
+                this.ctx.fillText(`💥${this.ammo}/${this.maxAmmo}`, this.canvas.width-80, 30);
+            }
+            
+            start() {
+                const gameLoop = () => { this.update(); this.gameLoopId = requestAnimationFrame(gameLoop); };
+                gameLoop();
+            }
+        }
+        
+        function initGame() {
+            const container = document.getElementById('game-content');
+            if (!currentUser) { container.innerHTML = `<div style="text-align:center; padding:100px;">Загрузка...</div>`; return; }
+            
+            container.innerHTML = `
+                <div class="game-hud">
+                    <div class="hud-row">
+                        <div class="hud-stat"><span>Пилот</span><span>${currentUser.name}</span></div>
+                        <div class="hud-stat"><span>Уровень</span><span class="level-badge" id="levelDisplay">1/50</span></div>
+                        <div class="hud-stat"><span>Монеты</span><span id="coinsDisplay">0</span></div>
+                        <div class="player-health-container">
+                            <div class="player-health-label"><span>ЗДОРОВЬЕ КОРАБЛЯ</span><span id="playerHpText">1000/1000</span></div>
+                            <div class="player-health-bar-bg"><div class="player-health-bar-fill" id="playerHealthFill" style="width:100%"></div></div>
+                            <div class="ammo-bar"><div class="ammo-fill" id="ammoFill" style="width:100%"></div></div>
+                        </div>
+                    </div>
+                    <div class="boss-progress-container">
+                        <div class="boss-progress-label"><span>До босса</span><span id="bossProgressText">0/10</span></div>
+                        <div class="boss-progress-bg"><div class="boss-progress-fill" id="bossProgressFill" style="width:0%"></div></div>
+                    </div>
+                    <div class="boss-health-row" id="bossHealthRow">
+                        <div class="hud-stat"><span>БОСС УР.</span><span id="bossLevelText">1</span></div>
+                        <div class="health-bar-container"><div class="health-bar-bg"><div class="health-bar-fill boss-health-fill" id="bossHealthFill" style="width:0%"></div></div></div>
+                        <span id="bossHpText" style="color:var(--accent)">0/0</span>
+                    </div>
+                </div>
+                <div class="canvas-wrapper"><canvas id="gameCanvas" width="1200" height="650"></canvas></div>
+                <div class="controls-panel">
+                    <div class="controls-left">
+                        <button class="game-btn shop-btn" id="shopBtn">Магазин</button>
+                        <button class="game-btn reset-btn" id="resetBtn">Сброс</button>
+                    </div>
+                    <div class="controls-center"><p>←↑↓→ или WASD — движение | ЛКМ — стрельба</p></div>
+                    <div class="controls-right">
+                        <button class="game-btn" id="pauseBtn">Пауза</button>
+                        <button class="game-btn exit-btn" id="exitBtn">Выйти</button>
+                    </div>
+                </div>
+            `;
+            
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
+            const hud = {
+                playerHealthFill: document.getElementById('playerHealthFill'),
+                playerHpText: document.getElementById('playerHpText'),
+                coinsSpan: document.getElementById('coinsDisplay'),
+                levelSpan: document.getElementById('levelDisplay'),
+                bossContainer: document.getElementById('bossHealthRow'),
+                bossHealthFill: document.getElementById('bossHealthFill'),
+                bossHpText: document.getElementById('bossHpText'),
+                bossLevelText: document.getElementById('bossLevelText'),
+                bossProgressFill: document.getElementById('bossProgressFill'),
+                bossProgressText: document.getElementById('bossProgressText')
+            };
+            
+            game = new SpaceBattleGame(canvas, ctx, hud);
+            document.getElementById('pauseBtn').onclick = () => game.pauseGame();
+            document.getElementById('exitBtn').onclick = () => game.exitGame();
+            document.getElementById('shopBtn').onclick = () => openShop();
+            document.getElementById('resetBtn').onclick = () => resetAllProgress();
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            if (checkAuth()) { updateUserUI(); loadGameData(); initGame(); }
+            else { redirectToLogin(); }
+        });
+        
+        window.toggleMenu = toggleMenu;
+        window.logout = logout;
+    </script>
+</body>
+</html>
