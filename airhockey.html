@@ -83,7 +83,7 @@
 </footer>
 <script src="js/main-obf.js"></script>
 <script>
-(function() {
+
     const user = JSON.parse(localStorage.getItem("user"));
     const userInfo = document.getElementById("user-info");
     
@@ -187,6 +187,16 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userEmail: user.email, goals: stats.goals, playTime: stats.playTime })
         }).catch(e => console.warn('Stat send error', e));
+    }
+    
+    function saveGameResult(gameName, score) {
+        try {
+            if (typeof window.saveScore === 'function') {
+                window.saveScore(gameName, score);
+            }
+        } catch(e) {
+            console.log('saveGameResult error:', e);
+        }
     }
     
     function startPlayTimer() {
@@ -689,12 +699,15 @@
     function animate() {
         playerPaddle.x += (playerTargetX - playerPaddle.x) * 0.25;
         playerPaddle.y += (playerTargetY - playerPaddle.y) * 0.25;
+        
         updateAI();
         updatePuck();
+        
         drawField();
         drawPaddle(playerPaddle);
         drawPaddle(aiPaddle);
         drawPuck();
+        
         requestAnimationFrame(animate);
     }
     
@@ -713,7 +726,7 @@
     document.getElementById('airhockeyResumeBtn').addEventListener('click', () => togglePause());
     
     init();
-})();
+
 </script>
 </body>
 </html>
