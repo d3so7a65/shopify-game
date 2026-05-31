@@ -1765,10 +1765,7 @@
                 </div>
             </div>
         `;
-        if (user.email === 'rickid812@gmail.com') {
-            const adminLink = document.getElementById('adminLinkItem');
-            if (adminLink) adminLink.style.display = 'block';
-        }
+        
         loadFriendsAndChats();
     } else {
         userInfo.innerHTML = `<a href="lgpass.html" class="nav-list__link">Войти</a>`;
