@@ -2116,3 +2116,363 @@ kbd {
         font-size: 0.7rem;
     }
 }
+
+#airhockeyCanvas,
+#snakeCanvas,
+#gameCanvas,
+#dinoCanvas,
+.pacman-board,
+.minesweeper-container .board {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+
+.airhockey-game-area,
+.snake-game-area,
+.canvas-wrapper,
+.pacman-game-layout,
+.minesweeper-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+@media (min-width: 1920px) {
+    .airhockey-container,
+    .snake-container,
+    .tic-tac-toe-container,
+    .minesweeper-container {
+        transform: scale(1);
+        max-width: 700px;
+    }
+    
+    #airhockeyCanvas {
+        width: 500px;
+        height: 620px;
+    }
+    
+    .snake-container {
+        max-width: 800px;
+    }
+    
+    .snake-title {
+        font-size: 2.5rem;
+    }
+    
+    .snake-score-value,
+    .snake-best-value {
+        font-size: 2.5rem !important;
+    }
+    
+    .pacman-board {
+        width: 800px;
+        height: 840px;
+    }
+    
+    .pacman-cell {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .game-board .cell {
+        width: 120px;
+        height: 120px;
+    }
+    
+    .tic-tac-toe-container .status {
+        font-size: 2rem;
+        padding: 20px 50px;
+    }
+    
+    .wheel-wrapper {
+        width: 500px;
+        height: 500px;
+    }
+}
+
+@media (min-width: 2560px) {
+    .airhockey-container,
+    .snake-container,
+    .tic-tac-toe-container,
+    .minesweeper-container {
+        transform: scale(1.1);
+        transform-origin: center top;
+        margin-top: 40px;
+    }
+    
+    #airhockeyCanvas {
+        width: 580px;
+        height: 720px;
+    }
+    
+    .airhockey-title {
+        font-size: 1.8rem;
+    }
+    
+    .airhockey-subtitle {
+        font-size: 0.9rem;
+    }
+    
+    .snake-container {
+        max-width: 900px;
+    }
+    
+    .snake-title {
+        font-size: 3rem;
+    }
+    
+    .game-board .cell {
+        width: 140px;
+        height: 140px;
+    }
+    
+    .wheel-wrapper {
+        width: 600px;
+        height: 600px;
+    }
+    
+    .wheel-result {
+        font-size: 32px;
+        padding: 20px;
+    }
+}
+
+@media (max-width: 1024px) and (min-width: 768px) {
+    .airhockey-container {
+        max-width: 450px;
+    }
+    
+    .snake-container {
+        max-width: 600px;
+    }
+    
+    .game-board .cell {
+        width: 85px;
+        height: 85px;
+    }
+    
+    .tic-tac-toe-container .status {
+        font-size: 1.4rem;
+        padding: 12px 30px;
+    }
+    
+    .pacman-board {
+        width: 500px;
+        height: 530px;
+    }
+    
+    .pacman-cell {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .wheel-wrapper {
+        width: 350px;
+        height: 350px;
+    }
+}
+
+@media (max-width: 767px) {
+    .airhockey-container {
+        max-width: 100%;
+        padding: 10px;
+    }
+    
+    .airhockey-title {
+        font-size: 1.1rem;
+    }
+    
+    .airhockey-subtitle {
+        font-size: 0.6rem;
+    }
+    
+    .airhockey-score-value {
+        font-size: 1.2rem;
+        min-width: 25px;
+    }
+    
+    .airhockey-btn {
+        padding: 4px 12px;
+        font-size: 0.7rem;
+    }
+    
+    .snake-container {
+        padding: 12px;
+    }
+    
+    .snake-title {
+        font-size: 1.4rem;
+    }
+    
+    .snake-score-box,
+    .snake-best-box {
+        padding: 5px 15px !important;
+        min-width: 90px !important;
+    }
+    
+    .snake-score-value,
+    .snake-best-value {
+        font-size: 1.3rem !important;
+    }
+    
+    .snake-btn {
+        padding: 5px 15px;
+        font-size: 0.75rem;
+    }
+    
+    .tic-tac-toe-container {
+        padding: 15px;
+    }
+    
+    .tic-tac-toe-container .game-title {
+        font-size: 1.5rem;
+    }
+    
+    .game-board {
+        gap: 10px;
+        padding: 15px;
+    }
+    
+    .game-board .cell {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .tic-tac-toe-container .status {
+        font-size: 1.1rem;
+        padding: 10px 20px;
+        min-width: 250px;
+    }
+    
+    .player-name {
+        font-size: 1.3rem;
+    }
+    
+    .score {
+        font-size: 2rem;
+        min-width: 80px;
+    }
+    
+    .pacman-game-layout {
+        flex-direction: column;
+        align-items: center;
+        height: auto;
+        padding: 10px;
+    }
+    
+    .pacman-board {
+        width: 100%;
+        max-width: 500px;
+        height: auto;
+        aspect-ratio: 608 / 640;
+    }
+    
+    .pacman-side-panel {
+        width: 100%;
+        max-width: 300px;
+    }
+    
+    .wheel-wrapper {
+        width: 280px;
+        height: 280px;
+    }
+    
+    .wheel-controls {
+        width: 100%;
+        max-width: 300px;
+    }
+    
+    .prize-inputs {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    
+    .wheel-buttons {
+        flex-direction: column;
+    }
+    
+    .wheel-result {
+        font-size: 18px;
+        min-width: 250px;
+    }
+    
+    .minesweeper-wrapper {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .minesweeper-sidebar {
+        width: 100%;
+        max-width: 280px;
+    }
+    
+    .minesweeper-container .cell {
+        min-width: 28px;
+        font-size: 0.7rem;
+    }
+    
+    .dino-top-notch,
+    .dino-bottom-notch {
+        padding: 6px 16px;
+        gap: 15px;
+    }
+    
+    .dino-top-notch .dino-notch-item span:last-child {
+        font-size: 16px;
+    }
+    
+    .dino-notch-btn {
+        padding: 5px 15px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .game-board .cell {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .airhockey-goal-message {
+        font-size: 28px;
+        letter-spacing: 3px;
+    }
+    
+    .airhockey-countdown {
+        font-size: 28px;
+    }
+    
+    .snake-controls-info {
+        font-size: 0.6rem;
+        padding: 4px 10px;
+    }
+    
+    .minesweeper-container .cell {
+        min-width: 24px;
+        font-size: 0.6rem;
+    }
+    
+    .choice-box {
+        padding: 20px 25px;
+    }
+    
+    .choice-btn {
+        padding: 10px 15px;
+        min-width: 100px;
+    }
+    
+    .choice-icon {
+        font-size: 1.5rem;
+    }
+    
+    .victory-message {
+        min-width: 280px;
+        padding: 25px;
+    }
+    
+    .victory-text {
+        font-size: 1.2rem;
+    }
+}
