@@ -706,3 +706,266 @@ html, body {
         flex-wrap: wrap;
     }
 }
+
+* {
+    box-sizing: border-box;
+}
+
+img, canvas, video {
+    max-width: 100%;
+    height: auto;
+}
+
+.container {
+    max-width: 90%;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+
+@media (min-width: 768px) {
+    .container {
+        max-width: 750px;
+    }
+    
+    .title-1 {
+        font-size: 48px;
+    }
+    
+    .projects {
+        gap: 20px;
+    }
+    
+    .project {
+        max-width: 340px;
+    }
+}
+
+@media (min-width: 1024px) {
+    .container {
+        max-width: 980px;
+    }
+    
+    .title-1 {
+        font-size: 54px;
+    }
+    
+    .project {
+        max-width: 300px;
+    }
+}
+
+@media (min-width: 1366px) {
+    .container {
+        max-width: 1300px;
+    }
+    
+    .title-1 {
+        font-size: 60px;
+    }
+    
+    .project {
+        max-width: 370px;
+    }
+}
+
+@media (min-width: 1920px) {
+    .container {
+        max-width: 1600px;
+    }
+    
+    .title-1 {
+        font-size: 72px;
+        margin-bottom: 80px;
+    }
+    
+    .project {
+        max-width: 450px;
+    }
+    
+    .project__title {
+        font-size: 28px;
+        padding: 20px 25px 30px;
+    }
+    
+    .profile-container,
+    .social-container {
+        max-width: 1600px;
+    }
+    
+    .settings-box {
+        width: 800px;
+        padding: 45px;
+    }
+    
+    .settings-value {
+        font-size: 24px;
+    }
+}
+
+@media (min-width: 2560px) {
+    .container {
+        max-width: 2400px;
+    }
+    
+    .title-1 {
+        font-size: 96px;
+        margin-bottom: 100px;
+    }
+    
+    .project {
+        max-width: 550px;
+    }
+    
+    .project__title {
+        font-size: 32px;
+        padding: 25px 30px 35px;
+    }
+    
+    .logo {
+        font-size: 32px;
+    }
+    
+    .nav-list {
+        font-size: 20px;
+        gap: 45px;
+    }
+    
+    .profile-container,
+    .social-container {
+        max-width: 2400px;
+    }
+    
+    .profile-card {
+        border-radius: 40px;
+    }
+    
+    .avatar-large {
+        width: 160px;
+        height: 160px;
+    }
+    
+    .user-name {
+        font-size: 2.5rem;
+    }
+    
+    .games-section {
+        padding: 40px;
+    }
+    
+    .game-title {
+        font-size: 1.4rem;
+    }
+    
+    .game-stats-row {
+        font-size: 0.9rem;
+    }
+    
+    .play-game-btn {
+        padding: 10px 30px;
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 767px) {
+    .container {
+        max-width: 95%;
+        padding: 0 10px;
+    }
+    
+    .title-1 {
+        font-size: 32px;
+        margin-bottom: 30px;
+    }
+    
+    .section {
+        padding: 40px 0;
+    }
+    
+    .nav-row {
+        justify-content: center;
+        gap: 15px;
+    }
+    
+    .logo {
+        font-size: 20px;
+    }
+    
+    .nav-list {
+        justify-content: center;
+        gap: 15px;
+    }
+    
+    .nav-list__item {
+        font-size: 14px;
+    }
+    
+    .header {
+        min-height: 500px;
+        padding: 30px 0;
+    }
+    
+    .header__title {
+        font-size: 28px;
+    }
+    
+    .header__title strong {
+        font-size: 40px;
+    }
+    
+    .btn {
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+    
+    .footer {
+        padding: 40px 0 30px;
+    }
+    
+    .social {
+        gap: 20px;
+    }
+    
+    .social img {
+        width: 28px;
+    }
+    
+    .copyright {
+        font-size: 12px;
+    }
+    
+    .profile-container,
+    .social-container {
+        padding: 10px;
+    }
+    
+    .settings-box {
+        width: 95%;
+        padding: 20px;
+    }
+    
+    .settings-list {
+        grid-template-columns: 1fr;
+    }
+    
+    .settings-item.password-block {
+        grid-column: auto;
+    }
+    
+    .stats-row {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .game-row {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .game-icon {
+        margin: 0 auto;
+    }
+    
+    .game-stats-row {
+        justify-content: center;
+    }
+}
