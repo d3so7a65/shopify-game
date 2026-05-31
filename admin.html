@@ -184,7 +184,7 @@
         userInfo.innerHTML = '<div class="profile-menu"><div class="profile-btn" onclick="toggleMenu()"><img src="' + avatarUrl + '" class="avatar"><span>' + (user.name || 'Admin') + '</span></div><div class="dropdown-menu" id="dropdown-menu"><button onclick="window.location.href=\'index.html\'">Профиль</button><button onclick="logout()">Выйти</button></div></div>';
         
         async function logout() {
-            try { await fetch('http://localhost:5000/logout', { method: 'POST', credentials: 'include' }); } catch(e) {}
+            try { await fetch('http://https://shopify-server-3iuh.onrender.com:5000/logout', { method: 'POST', credentials: 'include' }); } catch(e) {}
             localStorage.removeItem("user");
             window.location.href = "index.html";
         }
@@ -192,8 +192,8 @@
 
         async function updateOnlineStatus() {
             try {
-                await fetch('http://localhost:5000/api/user/heartbeat', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' } }).catch(() => {});
-                const res = await fetch('http://localhost:5000/api/user/online', { credentials: 'include', headers: { 'Content-Type': 'application/json' } }).catch(() => null);
+                await fetch('http://https://shopify-server-3iuh.onrender.com:5000/api/user/heartbeat', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' } }).catch(() => {});
+                const res = await fetch('http://https://shopify-server-3iuh.onrender.com:5000/api/user/online', { credentials: 'include', headers: { 'Content-Type': 'application/json' } }).catch(() => null);
                 if (res && res.ok) { const data = await res.json(); onlineUsers = new Set(data.onlineUsers || []); }
             } catch(e) { console.error(e); }
         }
@@ -318,9 +318,9 @@
                 const formData = new FormData();
                 formData.append('name', newName);
                 formData.append('email', newEmail);
-                const response = await fetch(`http://localhost:5000/update-profile`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` }, body: formData, credentials: 'include' });
+                const response = await fetch(`http://https://shopify-server-3iuh.onrender.com:5000/update-profile`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` }, body: formData, credentials: 'include' });
                 if (response.ok) {
-                    const roleResponse = await fetch(`http://localhost:5000/api/admin/user/${userId}/role`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ role: newRole }) });
+                    const roleResponse = await fetch(`http://https://shopify-server-3iuh.onrender.com:5000/api/admin/user/${userId}/role`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ role: newRole }) });
                     if (roleResponse.ok) { showNotification('Данные пользователя обновлены'); }
                     else { showNotification('Имя и email обновлены, но роль не изменена'); }
                     closeEditUserModal();
@@ -334,7 +334,7 @@
 
         async function loadStats() {
             try {
-                const res = await fetch('http://localhost:5000/api/admin/stats', { method: 'GET', credentials: 'include', headers: { 'Content-Type': 'application/json' } });
+                const res = await fetch('http://https://shopify-server-3iuh.onrender.com:5000/api/admin/stats', { method: 'GET', credentials: 'include', headers: { 'Content-Type': 'application/json' } });
                 if (!res.ok) throw new Error();
                 const stats = await res.json();
                 const gameNames = { snake:'🐍 Змейка', saper:'💣 Сапёр', pacman:'👻 PAC-MAN', dino:'🦕 Динозаврик', space:'🚀 Космобой', airhockey:'🏒 Аэрохоккей' };
@@ -348,7 +348,7 @@
 
         async function restoreAccount(id, name) {
             try {
-                const res = await fetch('http://localhost:5000/api/restore-account/' + id, { method: 'POST', credentials: 'include' });
+                const res = await fetch('http://https://shopify-server-3iuh.onrender.com:5000/api/restore-account/' + id, { method: 'POST', credentials: 'include' });
                 if (res.ok) { showNotification('Аккаунт "' + name + '" восстановлен'); await loadUsers(); await loadStats(); }
                 else { showNotification('Ошибка при восстановлении', true); }
             } catch(e) { showNotification('Ошибка сервера', true); }
@@ -356,7 +356,7 @@
 
         async function banUser(id, isBanned) {
             try {
-                const res = await fetch('http://localhost:5000/api/admin/user/' + id + '/ban', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ isBanned: isBanned }) });
+                const res = await fetch('http://https://shopify-server-3iuh.onrender.com:5000/api/admin/user/' + id + '/ban', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ isBanned: isBanned }) });
                 if (res.ok) { showNotification('Пользователь ' + (isBanned ? 'заблокирован' : 'разблокирован')); await loadUsers(); await loadStats(); }
                 else { showNotification('Ошибка', true); }
             } catch(e) { showNotification('Ошибка сервера', true); }
@@ -364,7 +364,7 @@
 
         async function resetUserScores(userId, userName) {
             try {
-                const res = await fetch('http://localhost:5000/api/admin/user/' + userId + '/reset-scores', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' } });
+                const res = await fetch('http://https://shopify-server-3iuh.onrender.com:5000/api/admin/user/' + userId + '/reset-scores', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' } });
                 if (res.ok) { showNotification('Рекорды пользователя "' + userName + '" сброшены'); await loadUsers(); await loadStats(); await loadScores(); }
                 else { showNotification('Ошибка при сбросе рекордов', true); }
             } catch(e) { showNotification('Ошибка сервера', true); }
@@ -372,7 +372,7 @@
 
         async function loadUsers() {
             try {
-                const res = await fetch('http://localhost:5000/api/admin/users', { method: 'GET', credentials: 'include', headers: { 'Content-Type': 'application/json' } });
+                const res = await fetch('http://https://shopify-server-3iuh.onrender.com:5000/api/admin/users', { method: 'GET', credentials: 'include', headers: { 'Content-Type': 'application/json' } });
                 if (!res.ok) throw new Error();
                 usersData = await res.json();
                 const tbody = document.getElementById('usersTableBody');
@@ -405,7 +405,7 @@
 
         async function changeRole(id, role) {
             try {
-                const res = await fetch('http://localhost:5000/api/admin/user/' + id + '/role', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ role: role }) });
+                const res = await fetch('http://https://shopify-server-3iuh.onrender.com:5000/api/admin/user/' + id + '/role', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ role: role }) });
                 if (res.ok) { showNotification('Роль изменена'); await loadUsers(); await loadStats(); }
                 else { showNotification('Ошибка', true); }
             } catch(e) { showNotification('Ошибка сервера', true); }
@@ -413,7 +413,7 @@
 
         async function deleteUser(id, name) {
             try {
-                const res = await fetch('http://localhost:5000/api/admin/user/' + id, { method: 'DELETE', credentials: 'include' });
+                const res = await fetch('http://https://shopify-server-3iuh.onrender.com:5000/api/admin/user/' + id, { method: 'DELETE', credentials: 'include' });
                 if (res.ok) { showNotification('Пользователь "' + name + '" удалён'); await loadUsers(); await loadStats(); await loadScores(); }
                 else { showNotification('Ошибка при удалении', true); }
             } catch(e) { showNotification('Ошибка сервера', true); }
@@ -421,7 +421,7 @@
 
         async function loadScores() {
             try {
-                const res = await fetch('http://localhost:5000/api/admin/scores', { method: 'GET', credentials: 'include', headers: { 'Content-Type': 'application/json' } });
+                const res = await fetch('http://https://shopify-server-3iuh.onrender.com:5000/api/admin/scores', { method: 'GET', credentials: 'include', headers: { 'Content-Type': 'application/json' } });
                 if (!res.ok) throw new Error();
                 const scores = await res.json();
                 const tbody = document.getElementById('scoresTableBody');
@@ -466,7 +466,7 @@
 
         document.getElementById('resetAllProgressBtn').addEventListener('click', async function() {
             try {
-                const response = await fetch('http://localhost:5000/api/admin/reset-all-scores', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' } });
+                const response = await fetch('http://https://shopify-server-3iuh.onrender.com:5000/api/admin/reset-all-scores', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' } });
                 if (response.ok) { showNotification('Все рекорды сброшены'); setTimeout(() => location.reload(), 1500); }
                 else { showNotification('Ошибка при сбросе', true); }
             } catch (error) { showNotification('Ошибка сервера', true); }

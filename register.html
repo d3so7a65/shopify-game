@@ -136,7 +136,7 @@
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-                const response = await fetch("http://localhost:5000/register", {
+                const response = await fetch("http://https://shopify-server-3iuh.onrender.com:5000/register", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(data),
