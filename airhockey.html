@@ -182,7 +182,7 @@
         if (playTimeSec > stats.playTime) stats.playTime = playTimeSec;
         localStorage.setItem(key, JSON.stringify(stats));
         
-        fetch('http://https://shopify-server-3iuh.onrender.com/api/airhockey/stats', {
+        fetch('https://shopify-server-3iuh.onrender.com/api/airhockey/stats', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userEmail: user.email, goals: stats.goals, playTime: stats.playTime })

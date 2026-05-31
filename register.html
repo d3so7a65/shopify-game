@@ -142,7 +142,7 @@
                     body: JSON.stringify(data),
                     signal: controller.signal
                 });
-                
+
                 clearTimeout(timeoutId);
                 const result = await response.json();
 
@@ -154,6 +154,8 @@
                         avatar: result.user?.avatar || null
                     };
                     localStorage.setItem("user", JSON.stringify(userData));
+                    const token = result.token || getCookie('token');
+                    if (token) localStorage.setItem('authToken', token);
                     
                     showMessage("Успешно!", true)
                     setTimeout(() => {

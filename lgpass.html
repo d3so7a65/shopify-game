@@ -220,6 +220,7 @@
                         }
                         
                         localStorage.setItem("user", JSON.stringify(userData));
+                        if (tokenToStore) localStorage.setItem('authToken', tokenToStore);
                         
                         if (rememberCheck.checked) {
                             saveRememberedCredentials(email, password);
