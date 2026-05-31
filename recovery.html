@@ -139,7 +139,7 @@
             const sendBtn = document.getElementById("sendCodeBtn");
             isSending = true;
             sendBtn.disabled = true;
-            sendBtn.textContent = "Отправка (до 30 сек)...";
+            sendBtn.textContent = "Отправка...";
 
             try {
                 const controller = new AbortController();
@@ -165,7 +165,7 @@
             } catch (error) {
                 let errorText = "Ошибка подключения к серверу";
                 if (error.name === "AbortError") {
-                    errorText = "Сервер не отвечает. Пожалуйста, подождите 30 секунд и попробуйте снова.";
+                    errorText = "Сервер не отвечает.";
                 }
                 showMessage(errorText, false, 1);
             } finally {
@@ -209,7 +209,7 @@
             const resetBtn = document.getElementById("resetPasswordBtn");
             isResetting = true;
             resetBtn.disabled = true;
-            resetBtn.textContent = "Сохранение (до 30 сек)...";
+            resetBtn.textContent = "Сохранение...";
 
             try {
                 const controller = new AbortController();
