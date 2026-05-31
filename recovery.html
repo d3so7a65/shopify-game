@@ -213,7 +213,7 @@
 
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 30000);
+                const timeoutId = setTimeout(() => controller.abort(), 8000);
 
                 const response = await fetch("https://shopify-server-3iuh.onrender.com/reset-password", {
                     method: "POST",
@@ -236,7 +236,7 @@
             } catch (error) {
                 let errorText = "Ошибка подключения к серверу";
                 if (error.name === "AbortError") {
-                    errorText = "Сервер не отвечает. Пожалуйста, подождите 30 секунд и попробуйте снова.";
+                    errorText = "Сервер не отвечает.";
                 }
                 showMessage(errorText, false, 3);
             } finally {
