@@ -188,7 +188,7 @@
 
         async function logout() {
             try {
-                await fetch('http://https://shopify-server-3iuh.onrender.com:5000/logout', { method: 'POST', credentials: 'include' });
+                await fetch('http://https://shopify-server-3iuh.onrender.com/logout', { method: 'POST', credentials: 'include' });
             } catch (e) {}
             localStorage.removeItem("user");
             window.location.href = "index.html";
@@ -227,7 +227,7 @@
             container.innerHTML = '<div class="loading">Загрузка рекордов...</div>';
 
             try {
-                const response = await fetch(`http://https://shopify-server-3iuh.onrender.com:5000/api/leaderboard/${game}`, {
+                const response = await fetch(`http://https://shopify-server-3iuh.onrender.com/api/leaderboard/${game}`, {
                     credentials: 'include'
                 });
 
@@ -313,7 +313,7 @@
                 container.innerHTML = `
                     <div class="error-message">
                         Ошибка загрузки рекордов<br>
-                        <small>Проверьте, запущен ли сервер: http://https://shopify-server-3iuh.onrender.com:5000/</small>
+                        <small>Проверьте, запущен ли сервер: http://https://shopify-server-3iuh.onrender.com/</small>
                     </div>
                 `;
             }

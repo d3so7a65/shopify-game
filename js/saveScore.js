@@ -1,4 +1,4 @@
-const API_URL = 'http://https://shopify-server-3iuh.onrender.com:5000';
+const API_URL = 'http://https://shopify-server-3iuh.onrender.com';
 
 async function saveGameResult(gameName, score) {
     const user = JSON.parse(localStorage.getItem("user"));
@@ -8,7 +8,7 @@ async function saveGameResult(gameName, score) {
     }
     
     try {
-        const response = await fetch('http://https://shopify-server-3iuh.onrender.com:5000/api/save-score', {
+        const response = await fetch('http://https://shopify-server-3iuh.onrender.com/api/save-score', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',

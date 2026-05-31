@@ -145,7 +145,7 @@
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-                const response = await fetch("http://https://shopify-server-3iuh.onrender.com:5000/send-recovery-code", {
+                const response = await fetch("http://https://shopify-server-3iuh.onrender.com/send-recovery-code", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ email: email }),
@@ -215,7 +215,7 @@
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-                const response = await fetch("http://https://shopify-server-3iuh.onrender.com:5000/reset-password", {
+                const response = await fetch("http://https://shopify-server-3iuh.onrender.com/reset-password", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ email: currentEmail, newPassword: newPassword }),

@@ -117,7 +117,7 @@
 
         async function checkTwoFA(email) {
             try {
-                const response = await fetch(`http://https://shopify-server-3iuh.onrender.com:5000/user/${encodeURIComponent(email)}`, { credentials: 'include' });
+                const response = await fetch(`http://https://shopify-server-3iuh.onrender.com/user/${encodeURIComponent(email)}`, { credentials: 'include' });
                 if (response.ok) { const data = await response.json(); return data.twoFactorEnabled === true; }
                 return false;
             } catch (error) { console.error("Ошибка проверки 2FA:", error); return false; }
@@ -125,7 +125,7 @@
 
         async function verifyTwoFACode(email, code) {
             try {
-                const response = await fetch("http://https://shopify-server-3iuh.onrender.com:5000/api/2fa/login", {
+                const response = await fetch("http://https://shopify-server-3iuh.onrender.com/api/2fa/login", {
                     method: "POST", headers: { "Content-Type": "application/json" },
                     credentials: 'include',
                     body: JSON.stringify({ email: email, token: code })
@@ -179,7 +179,7 @@
             submitBtn.textContent = "Вход...";
 
             try {
-                const response = await fetch("http://https://shopify-server-3iuh.onrender.com:5000/login", {
+                const response = await fetch("http://https://shopify-server-3iuh.onrender.com/login", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ email, password }),
