@@ -62,6 +62,8 @@
         let currentCode = "";
         let isSending = false;
         let isResetting = false;
+        let countdownInterval = null;
+        let resendTimeout = null;
 
         function showMessage(text, isSuccess = false, step = 1) {
             let msgBox;
@@ -70,15 +72,13 @@
             else msgBox = document.getElementById("formMessage3");
             
             msgBox.textContent = text;
-            if (isSuccess) {
-                msgBox.className = 'form-message success';
-            } else {
-                msgBox.className = 'form-message error';
-            }
+            msgBox.className = `form-message ${isSuccess ? 'success' : 'error'}`;
             msgBox.style.display = 'block';
             setTimeout(() => {
-                msgBox.style.display = 'none';
-            }, 3500);
+                if (msgBox.style.display === 'block') {
+                    msgBox.style.display = 'none';
+                }
+            }, 5000);
         }
 
         function showStep(stepNumber) {
@@ -86,6 +86,12 @@
             document.getElementById("step2").classList.remove("active");
             document.getElementById("step3").classList.remove("active");
             document.getElementById(`step${stepNumber}`).classList.add("active");
+            
+            // Очищаем таймер при смене шага
+            if (stepNumber !== 2 && countdownInterval) {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
+            }
         }
 
         function goToStep1() {
@@ -98,6 +104,71 @@
             document.getElementById("formMessage1").style.display = "none";
             document.getElementById("formMessage2").style.display = "none";
             document.getElementById("formMessage3").style.display = "none";
+            
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
+            }
+        }
+
+        function startCountdown(seconds) {
+            let remaining = seconds;
+            const countdownElement = document.getElementById('countdown');
+            
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+            
+            countdownInterval = setInterval(() => {
+                if (remaining <= 0) {
+                    clearInterval(countdownInterval);
+                    countdownElement.innerHTML = '<a href="#" id="resendCodeBtn" style="color: #667eea;">Отправить код повторно</a>';
+                    
+                    const resendBtn = document.getElementById('resendCodeBtn');
+                    if (resendBtn) {
+                        resendBtn.onclick = (e) => {
+                            e.preventDefault();
+                            resendCode();
+                        };
+                    }
+                } else {
+                    countdownElement.textContent = `Повторная отправка через ${remaining} секунд`;
+                    remaining--;
+                }
+            }, 1000);
+        }
+        
+        async function resendCode() {
+            if (!currentEmail) return;
+            
+            const sendBtn = document.getElementById("sendCodeBtn");
+            isSending = true;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/send-recovery-code`, {
+                    method: "POST",
+                    headers: { 
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    },
+                    body: JSON.stringify({ email: currentEmail })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    currentCode = result.code;
+                    showMessage("Код отправлен повторно!", true, 2);
+                    startCountdown(60);
+                } else {
+                    showMessage(result.message || "Ошибка отправки", false, 2);
+                }
+            } catch (error) {
+                console.error('Resend error:', error);
+                showMessage("Ошибка подключения к серверу", false, 2);
+            } finally {
+                isSending = false;
+            }
         }
 
         document.getElementById("backToStep1").onclick = function(e) {
@@ -121,6 +192,25 @@
             });
         }
 
+        // Обработка Enter
+        document.getElementById("email").addEventListener("keypress", function(e) {
+            if (e.key === "Enter") {
+                document.getElementById("sendCodeBtn").click();
+            }
+        });
+        
+        document.getElementById("code").addEventListener("keypress", function(e) {
+            if (e.key === "Enter") {
+                document.getElementById("verifyCodeBtn").click();
+            }
+        });
+        
+        document.getElementById("newPassword").addEventListener("keypress", function(e) {
+            if (e.key === "Enter") {
+                document.getElementById("resetPasswordBtn").click();
+            }
+        });
+
         document.getElementById("sendCodeBtn").onclick = async function() {
             if (isSending) return;
             
@@ -130,7 +220,7 @@
                 showMessage("Введите Email", false, 1);
                 return;
             }
-            if (!email.includes("@") || !email.includes(".")) {
+            if (!/^[^\s@]+@([^\s@]+\.)+[^\s@]+$/.test(email)) {
                 showMessage("Введите корректный email адрес", false, 1);
                 return;
             }
@@ -143,29 +233,42 @@
 
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 8000);
+                const timeoutId = setTimeout(() => controller.abort(), 15000);
 
-                const response = await fetch("https://shopify-server-3iuh.onrender.com/send-recovery-code", {
+                const response = await fetch(`${API_BASE_URL}/send-recovery-code`, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    headers: { 
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    },
                     body: JSON.stringify({ email: email }),
                     signal: controller.signal
                 });
 
                 clearTimeout(timeoutId);
-                const result = await response.json();
+                
+                let result;
+                try {
+                    result = await response.json();
+                } catch (e) {
+                    throw new Error("Неверный ответ от сервера");
+                }
 
                 if (response.ok) {
                     currentCode = result.code;
                     showMessage("Код отправлен на вашу почту!", true, 1);
                     showStep(2);
+                    startCountdown(60);
                 } else {
                     showMessage(result.message || "Пользователь не найден", false, 1);
                 }
             } catch (error) {
-                let errorText = "Ошибка подключения к серверу";
+                console.error('Send code error:', error);
+                let errorText = "Ошибка подключения к серверу. Проверьте консоль.";
                 if (error.name === "AbortError") {
-                    errorText = "Сервер не отвечает.";
+                    errorText = "Сервер не отвечает. Попробуйте позже.";
+                } else if (error.message === "Неверный ответ от сервера") {
+                    errorText = error.message;
                 }
                 showMessage(errorText, false, 1);
             } finally {
@@ -180,6 +283,11 @@
             
             if (!inputCode) {
                 showMessage("Введите код из письма", false, 2);
+                return;
+            }
+            
+            if (inputCode.length !== 6) {
+                showMessage("Код должен содержать 6 цифр", false, 2);
                 return;
             }
 
@@ -205,6 +313,12 @@
                 showMessage("Пароль должен содержать минимум 6 символов", false, 3);
                 return;
             }
+            
+            // Проверка сложности пароля
+            if (!/(?=.*[a-z])(?=.*[A-Z])/.test(newPassword)) {
+                showMessage("Пароль должен содержать заглавные и строчные буквы", false, 3);
+                return;
+            }
 
             const resetBtn = document.getElementById("resetPasswordBtn");
             isResetting = true;
@@ -213,20 +327,32 @@
 
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 8000);
+                const timeoutId = setTimeout(() => controller.abort(), 15000);
 
-                const response = await fetch("https://shopify-server-3iuh.onrender.com/reset-password", {
+                const response = await fetch(`${API_BASE_URL}/reset-password`, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ email: currentEmail, newPassword: newPassword }),
+                    headers: { 
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    },
+                    body: JSON.stringify({ 
+                        email: currentEmail, 
+                        newPassword: newPassword 
+                    }),
                     signal: controller.signal
                 });
 
                 clearTimeout(timeoutId);
-                const result = await response.json();
+                
+                let result;
+                try {
+                    result = await response.json();
+                } catch (e) {
+                    throw new Error("Неверный ответ от сервера");
+                }
 
                 if (response.ok) {
-                    showMessage("Пароль изменён!", true, 3);
+                    showMessage("Пароль успешно изменён! Перенаправление...", true, 3);
                     setTimeout(() => {
                         window.location.href = "lgpass.html";
                     }, 1500);
@@ -234,9 +360,12 @@
                     showMessage(result.message || "Ошибка при смене пароля", false, 3);
                 }
             } catch (error) {
+                console.error('Reset password error:', error);
                 let errorText = "Ошибка подключения к серверу";
                 if (error.name === "AbortError") {
-                    errorText = "Сервер не отвечает.";
+                    errorText = "Сервер не отвечает. Попробуйте позже.";
+                } else if (error.message === "Неверный ответ от сервера") {
+                    errorText = error.message;
                 }
                 showMessage(errorText, false, 3);
             } finally {
@@ -245,6 +374,33 @@
                 isResetting = false;
             }
         };
+
+        // Проверка доступности API при загрузке страницы
+        async function checkAPIHealth() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`, {
+                    method: "GET",
+                    timeout: 5000
+                });
+                if (!response.ok) {
+                    console.warn('API health check failed');
+                }
+            } catch (error) {
+                console.warn('API server might be offline:', error.message);
+            }
+        }
+        
+        // Запускаем проверку
+        checkAPIHealth();
+        
+        // Инструкция по настройке
+        console.log('%c📧 Настройка SMTP для восстановления пароля', 'color: #667eea; font-size: 16px; font-weight: bold;');
+        console.log('%c1. Установите зависимости: npm install nodemailer express cors', 'color: #666;');
+        console.log('%c2. Создайте бэкенд сервер на Render/Railway/Koyeb/Cyclic', 'color: #666;');
+        console.log('%c3. Добавьте переменные окружения: SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS', 'color: #666;');
+        console.log('%c4. Замените API_BASE_URL на URL вашего сервера', 'color: #666;');
     </script>
+</body>
+</html>
 </body>
 </html>
