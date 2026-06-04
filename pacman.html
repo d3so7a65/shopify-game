@@ -7,6 +7,30 @@
     <link rel="stylesheet" href="main.css">
     <link rel="stylesheet" href="game.css">
     <script src="js/saveScore.js"></script>
+    <style>
+        
+        .pacman-game-layout {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 30px;
+            padding: 20px;
+            min-height: 60vh;
+            flex-wrap: wrap;
+        }
+        .pacman-game-card {
+            flex-shrink: 0;
+        }
+        .pacman-side-panel {
+            flex-shrink: 0;
+        }
+        @media (max-width: 768px) {
+            .pacman-game-layout {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
 </head>
 <body>
 
@@ -48,6 +72,7 @@
         <div class="pacman-info"><div class="pacman-info-title">УРОВЕНЬ</div><div class="pacman-info-value" id="pacmanLevel">1</div></div>
     </div>
 </div>
+
 <footer class="footer">
     <div class="container">
         <div class="footer__wrapper">
@@ -62,8 +87,59 @@
         </div>
     </div>
 </footer>
+
 <script src="js/main-obf.js"></script>
 <script>
+
+const user = JSON.parse(localStorage.getItem("user"));
+const userInfo = document.getElementById("user-info");
+
+if (!user || !user.email) {
+    window.location.href = 'lgpass.html';
+}
+
+function initUserMenu() {
+    if (user && user.email) {
+        const avatarUrl = user.avatar || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+        userInfo.innerHTML = `
+            <div class="profile-menu">
+                <div class="profile-btn" onclick="toggleMenu()">
+                    <img src="${avatarUrl}" class="avatar">
+                    <span>${escapeHtml(user.name)}</span>
+                </div>
+                <div class="dropdown-menu" id="dropdown-menu">
+                    <button onclick="logout()">Выйти</button>
+                </div>
+            </div>
+        `;
+    } else {
+        userInfo.innerHTML = `<a href="lgpass.html" class="nav-list__link">Войти</a>`;
+    }
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+}
+
+function toggleMenu() {
+    const menu = document.getElementById("dropdown-menu");
+    if (menu) menu.classList.toggle("show-menu");
+}
+
+function logout() {
+    localStorage.removeItem("user");
+    localStorage.removeItem("authToken");
+    window.location.href = 'lgpass.html';
+}
+
+initUserMenu();
+
 const sounds = {
     music: new Audio('assets/music.mp3'),
     run: new Audio('assets/run.mp3'),
@@ -128,7 +204,7 @@ function playDeathSound() {
     }
 }
 
-function applyTheme(){
+function applyTheme() {
     if(document.body.classList.contains("dark")){
         document.documentElement.classList.add("dark");
     }else{
@@ -137,33 +213,6 @@ function applyTheme(){
 }
 applyTheme();
 new MutationObserver(applyTheme).observe(document.body,{attributes:true,attributeFilter:["class"]});
-
-const user = JSON.parse(localStorage.getItem("user"));
-const userInfo = document.getElementById("user-info");
-if(user){
-    userInfo.innerHTML = `
-    <div class="profile-menu">
-        <div class="profile-btn" onclick="toggleMenu()">
-            <img src="${user.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" class="avatar">
-            <span>${user.name}</span>
-        </div>
-        <div class="dropdown-menu" id="dropdown-menu">
-            <button onclick="logout()">Выйти</button>
-        </div>
-    </div>`;
-    setTimeout(()=>{
-        window.toggleMenu = function() {
-            document.getElementById("dropdown-menu").classList.toggle("show-menu");
-        };
-    });
-}else{
-    userInfo.innerHTML = `<a href="lgpass.html" class="nav-list__link">Войти</a>`;
-}
-
-function logout() {
-    localStorage.removeItem("user");
-    window.location.href = 'lgpass.html';
-}
 
 const TILE = 32, W = 19, H = 20;
 const MAPS = [
@@ -486,7 +535,9 @@ function updateHUD(){
 }
 
 function showGameOver(){
-    saveGameResult('pacman', score);
+    if (typeof window.saveScore === 'function') {
+        window.saveScore('pacman', score);
+    }
     paused=true;
     let modal=document.createElement("div");
     modal.className="pacman-pause-modal-overlay";
@@ -537,4 +588,4 @@ function init(){
 init();
 </script>
 </body>
-</html
+</html>
