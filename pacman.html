@@ -388,15 +388,55 @@ function activateRageMode(){
     }, 14000);
 }
 
-function movePlayer(dx,dy,dir){
-    if(paused) return;
-    let nx=player.x+dx, ny=player.y+dy;
-    if(canMove(nx,ny)){
+function canMove(x, y) {
+    if (y === 9 || y === 10) {
+        if (x < 0) return 18;
+        if (x >= W) return 0;
+    }
+    if (x < 0 || x >= W || y < 0 || y >= H) return false;
+    return map[y] && map[y][x] && map[y][x] !== "#";
+}
+
+function movePlayer(dx, dy, dir) {
+    if (paused) return;
+    let nx = player.x + dx;
+    let ny = player.y + dy;
+
+    let teleport = canMove(nx, ny);
+    if (teleport === 18) {
+        player.x = 18;
+        player.y = ny;
+        player.dir = dir;
+        updatePositions();
         playRunSound();
-        player.x=nx; player.y=ny; player.dir=dir;
-        if(map[ny][nx]==="."){ map[ny][nx]=" "; score+=10; }
-        if(map[ny][nx]==="o"){ map[ny][nx]=" "; score+=50; activateRageMode(); }
-        updateHUD(); drawMap(); checkLevel();
+        return;
+    }
+    if (teleport === 0) {
+        player.x = 0;
+        player.y = ny;
+        player.dir = dir;
+        updatePositions();
+        playRunSound();
+        return;
+    }
+    
+    if (teleport === true) {
+        playRunSound();
+        player.x = nx;
+        player.y = ny;
+        player.dir = dir;
+        if (map[ny][nx] === ".") { 
+            map[ny][nx] = " "; 
+            score += 10; 
+        }
+        if (map[ny][nx] === "o") { 
+            map[ny][nx] = " "; 
+            score += 50; 
+            activateRageMode(); 
+        }
+        updateHUD(); 
+        drawMap(); 
+        checkLevel();
     }
 }
 
