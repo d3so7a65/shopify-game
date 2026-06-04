@@ -233,25 +233,25 @@ html, body {
     opacity: 0.8;
 }
 
-/* ========== КАРТОЧКИ ИГР - ОДИНАКОВЫЙ РАЗМЕР ========== */
+/* ========== КВАДРАТНЫЕ КАРТОЧКИ ИГР ========== */
 .projects {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    justify-content: center;
     gap: 30px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
 }
 
 .project {
-    max-width: 100%;
-    min-width: 0;
-    border-radius: 12px;
     background-color: var(--project-card-bg);
+    border-radius: 16px;
     box-shadow: var(--box-shadow);
+    overflow: hidden;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    aspect-ratio: 1 / 1;
     display: flex;
     flex-direction: column;
-    height: 100%;
-    overflow: hidden;
 }
 
 .project:hover {
@@ -259,25 +259,32 @@ html, body {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
+.project a {
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
 .project__img {
     width: 100%;
-    height: 200px;
+    height: 60%;
     object-fit: cover;
     display: block;
 }
 
 .project__title {
-    padding: 15px 15px 20px;
+    height: 40%;
+    padding: 0 12px;
     font-size: 18px;
     font-weight: 600;
-    line-height: 1.3;
-    color: var(--project-card-text);
     text-align: center;
+    color: var(--project-card-text);
     margin: 0;
-    flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
+    background-color: var(--project-card-bg);
 }
 
 .footer {
@@ -742,7 +749,6 @@ img, canvas, video {
     padding: 0 15px;
 }
 
-/* ========== АДАПТАЦИЯ КАРТОЧЕК ПОД РАЗНЫЕ ЭКРАНЫ ========== */
 @media (min-width: 768px) {
     .container {
         max-width: 750px;
@@ -770,10 +776,6 @@ img, canvas, video {
         grid-template-columns: repeat(3, 1fr);
         gap: 25px;
     }
-    
-    .project__img {
-        height: 180px;
-    }
 }
 
 @media (min-width: 1366px) {
@@ -788,10 +790,6 @@ img, canvas, video {
     .projects {
         grid-template-columns: repeat(4, 1fr);
         gap: 30px;
-    }
-    
-    .project__img {
-        height: 200px;
     }
     
     .project__title {
@@ -814,13 +812,8 @@ img, canvas, video {
         gap: 35px;
     }
     
-    .project__img {
-        height: 240px;
-    }
-    
     .project__title {
         font-size: 22px;
-        padding: 18px 20px 25px;
     }
     
     .profile-container,
@@ -853,13 +846,8 @@ img, canvas, video {
         gap: 40px;
     }
     
-    .project__img {
-        height: 300px;
-    }
-    
     .project__title {
         font-size: 26px;
-        padding: 22px 25px 30px;
     }
     
     .logo {
@@ -912,14 +900,8 @@ img, canvas, video {
         grid-template-columns: repeat(2, 1fr);
         gap: 20px;
     }
-    
-    .project__img {
-        height: 160px;
-    }
-    
     .project__title {
         font-size: 16px;
-        padding: 12px 12px 16px;
     }
 }
 
@@ -1032,31 +1014,20 @@ img, canvas, video {
     }
     
     .project {
-        max-width: 100%;
-    }
-    
-    .project__img {
-        height: 200px;
+        aspect-ratio: 1 / 1;
     }
     
     .project__title {
         font-size: 18px;
-        padding: 15px;
+        padding: 0 12px;
     }
 }
 
 @media (max-width: 480px) {
     .projects {
-        grid-template-columns: 1fr;
         gap: 15px;
     }
-    
-    .project__img {
-        height: 180px;
-    }
-    
     .project__title {
         font-size: 16px;
-        padding: 12px;
     }
 }
