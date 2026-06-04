@@ -234,15 +234,14 @@ html, body {
 }
 
 .projects {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
     justify-content: center;
-    flex-wrap: wrap;
-    column-gap: 30px;
-    row-gap: 30px;
+    gap: 30px;
 }
 
 .project {
-    max-width: 370px;
+    max-width: 100%;
     border-radius: 10px;
     background-color: var(--project-card-bg);
     box-shadow: var(--box-shadow);
@@ -250,6 +249,8 @@ html, body {
 
 .project__img {
     border-radius: 10px;
+    width: 100%;
+    height: auto;
 }
 
 .project__title {
@@ -258,6 +259,7 @@ html, body {
     font-weight: 700;
     line-height: 1.3;
     color: var(--project-card-text);
+    text-align: center;
 }
 
 .footer {
@@ -734,10 +736,6 @@ img, canvas, video {
     .projects {
         gap: 20px;
     }
-    
-    .project {
-        max-width: 340px;
-    }
 }
 
 @media (min-width: 1024px) {
@@ -749,8 +747,9 @@ img, canvas, video {
         font-size: 54px;
     }
     
-    .project {
-        max-width: 300px;
+    .projects {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 25px;
     }
 }
 
@@ -763,8 +762,9 @@ img, canvas, video {
         font-size: 60px;
     }
     
-    .project {
-        max-width: 370px;
+    .projects {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 30px;
     }
 }
 
@@ -778,8 +778,9 @@ img, canvas, video {
         margin-bottom: 80px;
     }
     
-    .project {
-        max-width: 450px;
+    .projects {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 35px;
     }
     
     .project__title {
@@ -812,8 +813,9 @@ img, canvas, video {
         margin-bottom: 100px;
     }
     
-    .project {
-        max-width: 550px;
+    .projects {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 40px;
     }
     
     .project__title {
@@ -863,6 +865,13 @@ img, canvas, video {
     .play-game-btn {
         padding: 10px 30px;
         font-size: 1rem;
+    }
+}
+
+@media (max-width: 1023px) and (min-width: 768px) {
+    .projects {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
     }
 }
 
@@ -967,5 +976,21 @@ img, canvas, video {
     
     .game-stats-row {
         justify-content: center;
+    }
+    
+    .projects {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .project {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .projects {
+        grid-template-columns: 1fr;
+        gap: 15px;
     }
 }
