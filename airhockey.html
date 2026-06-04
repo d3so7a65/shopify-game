@@ -193,7 +193,7 @@ let paused = false;
 let isCountdown = false;
 let goalMessageTimer = null;
 
-let lastPlayTime = 0;
+let lastHitTime = 0;
 let playerTargetX = CENTER_X;
 let playerTargetY = H - 100;
 let countdownTimeout = null;
@@ -236,12 +236,6 @@ function stopPlayTimer() {
     if (playInterval) clearInterval(playInterval);
     if (gameActive) saveAirhockeyStats(playerScore, totalPlaySeconds);
 }
-
-
-const BASE_AI_SPEED = 0.07;
-const BASE_RETURN_SPEED = 0.04;
-const BASE_POWER = 0.9;
-const BASE_MAX_SPEED = 7.0;
 
 const difficulties = [
     { name: "ЛЕГКИЙ", winScore: 10, aiSpeed: 0.07, returnSpeed: 0.04, power: 0.9, maxSpeed: 7.0 },
@@ -335,6 +329,55 @@ function updateAI() {
     aiPaddle.y = Math.min(Math.max(aiPaddle.y, WALL_TOP + PADDLE_RADIUS + 15), CENTER_Y - PADDLE_RADIUS - 30);
 }
 
+function playHitSound() {
+    if (!gameActive) return;
+    const now = Date.now();
+    if (now - lastHitTime < 50) return;
+    lastHitTime = now;
+    try {
+        const sound = new Audio('assets/airhockey.mp3');
+        sound.volume = 0.35;
+        sound.play().catch(e => {});
+    } catch(e) {}
+}
+
+function playGolSound() {
+    try {
+        const sound = new Audio('assets/gol.mp3');
+        sound.volume = 0.5;
+        sound.play().catch(e => {});
+    } catch(e) {}
+}
+
+function playWinSound() {
+    try {
+        const sound = new Audio('assets/airwin.mp3');
+        sound.volume = 0.5;
+        sound.play().catch(e => {});
+    } catch(e) {}
+}
+
+function playCountSound(num) {
+    try {
+        let sound = null;
+        if (num === 3) sound = new Audio('assets/3.mp3');
+        else if (num === 2) sound = new Audio('assets/2.mp3');
+        else if (num === 1) sound = new Audio('assets/1.mp3');
+        if (sound) {
+            sound.volume = 0.5;
+            sound.play().catch(e => {});
+        }
+    } catch(e) {}
+}
+
+function playStartedSound() {
+    try {
+        const sound = new Audio('assets/started.mp3');
+        sound.volume = 0.5;
+        sound.play().catch(e => {});
+    } catch(e) {}
+}
+
 function handleCollisions() {
     const maxSpeed = difficulties[currentDifficulty].maxSpeed;
     
@@ -355,6 +398,7 @@ function handleCollisions() {
         if (puck.vy > 0) puck.vy = -Math.abs(puck.vy) - 2;
         puck.vx = Math.min(Math.max(puck.vx, -maxSpeed), maxSpeed);
         puck.vy = Math.min(Math.max(puck.vy, -maxSpeed), maxSpeed);
+        playHitSound();
     }
     
     const dxAi = puck.x - aiPaddle.x;
@@ -376,15 +420,18 @@ function handleCollisions() {
         else puck.vy = Math.abs(puck.vy) + 3;
         puck.vx = Math.min(Math.max(puck.vx, -maxSpeed), maxSpeed);
         puck.vy = Math.min(Math.max(puck.vy, -maxSpeed), maxSpeed);
+        playHitSound();
     }
     
     if (puck.x - PUCK_RADIUS < WALL_LEFT) {
         puck.x = WALL_LEFT + PUCK_RADIUS;
         puck.vx = -puck.vx * 0.96;
+        playHitSound();
     }
     if (puck.x + PUCK_RADIUS > WALL_RIGHT) {
         puck.x = WALL_RIGHT - PUCK_RADIUS;
         puck.vx = -puck.vx * 0.96;
+        playHitSound();
     }
     
     if (puck.y - PUCK_RADIUS < WALL_TOP) {
@@ -439,61 +486,6 @@ function updatePuck() {
     handleCollisions();
     puck.vx *= 0.999;
     puck.vy *= 0.999;
-}
-
-const hitSound = new Audio('assets/airhockey.mp3');
-hitSound.volume = 0.4;
-const golSound = new Audio('assets/gol.mp3');
-golSound.volume = 0.5;
-const winSound = new Audio('assets/airwin.mp3');
-winSound.volume = 0.5;
-const count3Sound = new Audio('assets/3.mp3');
-count3Sound.volume = 0.5;
-const count2Sound = new Audio('assets/2.mp3');
-count2Sound.volume = 0.5;
-const count1Sound = new Audio('assets/1.mp3');
-count1Sound.volume = 0.5;
-const startedSound = new Audio('assets/started.mp3');
-startedSound.volume = 0.5;
-
-function playHitSound() {
-    if (!gameActive) return;
-    const now = Date.now();
-    if (now - lastPlayTime < 40) return;
-    lastPlayTime = now;
-    try {
-        hitSound.currentTime = 0;
-        hitSound.play().catch(e => console.log('Sound error:', e));
-    } catch(e) {}
-}
-
-function playGolSound() {
-    try {
-        golSound.currentTime = 0;
-        golSound.play();
-    } catch(e) {}
-}
-
-function playWinSound() {
-    try {
-        winSound.currentTime = 0;
-        winSound.play();
-    } catch(e) {}
-}
-
-function playCountSound(num) {
-    try {
-        if (num === 3) { count3Sound.currentTime = 0; count3Sound.play(); }
-        else if (num === 2) { count2Sound.currentTime = 0; count2Sound.play(); }
-        else if (num === 1) { count1Sound.currentTime = 0; count1Sound.play(); }
-    } catch(e) {}
-}
-
-function playStartedSound() {
-    try {
-        startedSound.currentTime = 0;
-        startedSound.play();
-    } catch(e) {}
 }
 
 function showGoalMessage(goalType) {
