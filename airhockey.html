@@ -8,28 +8,21 @@
     <link rel="stylesheet" href="game.css">
     <script src="js/saveScore.js"></script>
     <style>
-        /* Дополнительные стили для исправления отображения */
-        .airhockey-container {
-            max-width: 500px;
-            width: 100%;
-            margin: 0 auto;
-            padding: 20px;
+        .section {
+            padding: 40px 0;
+            min-height: calc(100vh - 200px);
+            background: var(--page-bg);
         }
-        .airhockey-game-area {
-            display: flex;
-            justify-content: center;
+        .airhockey-container {
+            max-width: 550px;
+            margin: 0 auto;
         }
         #airhockeyCanvas {
-            max-width: 100%;
+            display: block;
+            margin: 0 auto;
+            width: 100%;
             height: auto;
-        }
-        @media (max-width: 600px) {
-            .airhockey-container {
-                padding: 10px;
-            }
-            .airhockey-score-value {
-                font-size: 1.2rem;
-            }
+            max-width: 550px;
         }
     </style>
 </head>
@@ -71,7 +64,7 @@
             </div>
             
             <div class="airhockey-game-area">
-                <canvas id="airhockeyCanvas" width="420" height="520"></canvas>
+                <canvas id="airhockeyCanvas" width="500" height="600"></canvas>
                 <div id="airhockeyGoalMessage" class="airhockey-goal-message">ГОЛ</div>
                 <div id="airhockeyCountdown" class="airhockey-countdown"></div>
             </div>
@@ -85,7 +78,7 @@
     </div>
 </main>
 
-<div id="airhockeyPauseModal" class="airhockey-pause-modal-overlay" style="display: none;">
+<div id="airhockeyPauseModal" class="airhockey-pause-modal-overlay">
     <div class="airhockey-pause-modal">
         <div class="airhockey-pause-icon">⏸</div>
         <h2>ПАУЗА</h2>
@@ -110,16 +103,13 @@
 
 <script src="js/main-obf.js"></script>
 <script>
-// ========== ПРОВЕРКА АВТОРИЗАЦИИ ==========
 const user = JSON.parse(localStorage.getItem("user"));
 const userInfo = document.getElementById("user-info");
 
 if (!user || !user.email) {
-    // Нет авторизации - перенаправляем на страницу входа
     window.location.href = 'lgpass.html';
 }
 
-// ========== ИНИЦИАЛИЗАЦИЯ ПРОФИЛЯ ==========
 function initUserMenu() {
     if (user && user.email) {
         const avatarUrl = user.avatar || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
@@ -134,7 +124,6 @@ function initUserMenu() {
                 </div>
             </div>
         `;
-        // Обновляем имя игрока в интерфейсе
         const playerNameSpan = document.getElementById('airhockeyPlayerNameLabel');
         if (playerNameSpan) playerNameSpan.textContent = user.name;
     } else {
@@ -163,33 +152,34 @@ function logout() {
     window.location.href = 'lgpass.html';
 }
 
-// Запускаем инициализацию
 initUserMenu();
 
-// ========== ИГРА АЭРОХОККЕЙ ==========
 const canvas = document.getElementById('airhockeyCanvas');
 const ctx = canvas.getContext('2d');
 
-const W = canvas.width;
-const H = canvas.height;
+const W = 500;
+const H = 600;
+canvas.width = W;
+canvas.height = H;
+
 const CENTER_X = W / 2;
 const CENTER_Y = H / 2;
 
-const WALL_TOP = 22;
-const WALL_BOTTOM = H - 22;
-const WALL_LEFT = 16;
-const WALL_RIGHT = W - 16;
+const WALL_TOP = 30;
+const WALL_BOTTOM = H - 30;
+const WALL_LEFT = 20;
+const WALL_RIGHT = W - 20;
 
-const PADDLE_RADIUS = 23;
-const PUCK_RADIUS = 17;
+const PADDLE_RADIUS = 25;
+const PUCK_RADIUS = 18;
 
-const GOAL_WIDTH = 130;
-const GOAL_HEIGHT = 16;
-const AI_GOAL = { x: CENTER_X - GOAL_WIDTH/2, y: WALL_TOP - 10, w: GOAL_WIDTH, h: GOAL_HEIGHT };
-const PLAYER_GOAL = { x: CENTER_X - GOAL_WIDTH/2, y: WALL_BOTTOM - GOAL_HEIGHT + 10, w: GOAL_WIDTH, h: GOAL_HEIGHT };
+const GOAL_WIDTH = 140;
+const GOAL_HEIGHT = 18;
+const AI_GOAL = { x: CENTER_X - GOAL_WIDTH/2, y: WALL_TOP - 12, w: GOAL_WIDTH, h: GOAL_HEIGHT };
+const PLAYER_GOAL = { x: CENTER_X - GOAL_WIDTH/2, y: WALL_BOTTOM - GOAL_HEIGHT + 12, w: GOAL_WIDTH, h: GOAL_HEIGHT };
 
-let playerPaddle = { x: CENTER_X, y: H - 80 };
-let aiPaddle = { x: CENTER_X, y: WALL_TOP + 55 };
+let playerPaddle = { x: CENTER_X, y: H - 100 };
+let aiPaddle = { x: CENTER_X, y: WALL_TOP + 70 };
 let puck = { x: CENTER_X, y: CENTER_Y, vx: 0, vy: 0 };
 
 let playerScore = 0;
@@ -204,25 +194,14 @@ let isCountdown = false;
 let goalMessageTimer = null;
 
 let lastPlayTime = 0;
-
 let playerTargetX = CENTER_X;
-let playerTargetY = H - 80;
-
+let playerTargetY = H - 100;
 let countdownTimeout = null;
-
-let sounds = {
-    hit: null,
-    gol: null,
-    win: null,
-    count3: null,
-    count2: null,
-    count1: null,
-    started: null
-};
 
 let gameStartTime = Date.now();
 let totalPlaySeconds = 0;
 let playInterval = null;
+let animationId = null;
 
 function saveAirhockeyStats(goals, playTimeSec) {
     if (!user || !user.email) return;
@@ -240,9 +219,7 @@ function saveGameResult(gameName, score) {
         if (typeof window.saveScore === 'function') {
             window.saveScore(gameName, score);
         }
-    } catch(e) {
-        console.log('saveGameResult error:', e);
-    }
+    } catch(e) {}
 }
 
 function startPlayTimer() {
@@ -260,71 +237,11 @@ function stopPlayTimer() {
     if (gameActive) saveAirhockeyStats(playerScore, totalPlaySeconds);
 }
 
-function preloadSounds() {
-    sounds.hit = new Audio('assets/airhockey.mp3');
-    sounds.hit.volume = 0.35;
-    sounds.gol = new Audio('assets/gol.mp3');
-    sounds.gol.volume = 0.5;
-    sounds.win = new Audio('assets/airwin.mp3');
-    sounds.win.volume = 0.5;
-    sounds.count3 = new Audio('assets/3.mp3');
-    sounds.count3.volume = 0.5;
-    sounds.count2 = new Audio('assets/2.mp3');
-    sounds.count2.volume = 0.5;
-    sounds.count1 = new Audio('assets/1.mp3');
-    sounds.count1.volume = 0.5;
-    sounds.started = new Audio('assets/started.mp3');
-    sounds.started.volume = 0.5;
-}
-
-function playHitSound() {
-    if (!gameActive) return;
-    const now = Date.now();
-    if (now - lastPlayTime < 30) return;
-    lastPlayTime = now;
-    try {
-        const sound = sounds.hit.cloneNode();
-        sound.volume = 0.35;
-        sound.play().catch(e => console.log('Sound error:', e));
-    } catch(e) {}
-}
-
-function playCountSound(num) {
-    try {
-        let sound = null;
-        if (num === 3) sound = sounds.count3.cloneNode();
-        else if (num === 2) sound = sounds.count2.cloneNode();
-        else if (num === 1) sound = sounds.count1.cloneNode();
-        if (sound) {
-            sound.volume = 0.5;
-            sound.play().catch(e => console.log('Count sound error:', e));
-        }
-    } catch(e) {}
-}
-
-function playStartedSound() {
-    try {
-        const sound = sounds.started.cloneNode();
-        sound.volume = 0.5;
-        sound.play().catch(e => console.log('Started sound error:', e));
-    } catch(e) {}
-}
-
-function playGolSound() {
-    try {
-        const sound = sounds.gol.cloneNode();
-        sound.volume = 0.5;
-        sound.play().catch(e => console.log('Gol sound error:', e));
-    } catch(e) {}
-}
-
-function playWinSound() {
-    try {
-        const sound = sounds.win.cloneNode();
-        sound.volume = 0.5;
-        sound.play().catch(e => console.log('Win sound error:', e));
-    } catch(e) {}
-}
+// Базовые скорости (не зависят от FPS)
+const BASE_AI_SPEED = 0.07;
+const BASE_RETURN_SPEED = 0.04;
+const BASE_POWER = 0.9;
+const BASE_MAX_SPEED = 7.0;
 
 const difficulties = [
     { name: "ЛЕГКИЙ", winScore: 10, aiSpeed: 0.07, returnSpeed: 0.04, power: 0.9, maxSpeed: 7.0 },
@@ -381,6 +298,204 @@ function updateScoreUI() {
     }
 }
 
+let aiTargetX = CENTER_X;
+let aiTargetY = WALL_TOP + 70;
+let lastTimestamp = 0;
+
+function updateAI() {
+    if (!gameActive || paused || isCountdown) return;
+    
+    let targetX = CENTER_X;
+    let targetY = WALL_TOP + 70;
+    const isPuckInAITerritory = puck.y - PUCK_RADIUS < CENTER_Y - 30;
+    const isPuckNearWall = (puck.x - PUCK_RADIUS < WALL_LEFT + 30) || (puck.x + PUCK_RADIUS > WALL_RIGHT - 30);
+    const isPuckInCorner = isPuckNearWall && (puck.y - PUCK_RADIUS < WALL_TOP + 50);
+    
+    if (isPuckInAITerritory && !isPuckInCorner) {
+        targetX = puck.x;
+        targetY = puck.y;
+        const safeMargin = 30;
+        targetX = Math.min(Math.max(targetX, WALL_LEFT + PADDLE_RADIUS + safeMargin), WALL_RIGHT - PADDLE_RADIUS - safeMargin);
+        targetY = Math.min(Math.max(targetY, WALL_TOP + PADDLE_RADIUS + 20), CENTER_Y - PADDLE_RADIUS - 40);
+    } else if (isPuckInCorner) {
+        targetX = CENTER_X;
+        targetY = WALL_TOP + 60;
+    }
+    
+    let speed = difficulties[currentDifficulty].returnSpeed;
+    if (isPuckInAITerritory && !isPuckInCorner) {
+        speed = difficulties[currentDifficulty].aiSpeed;
+    }
+    
+    aiTargetX += (targetX - aiTargetX) * speed;
+    aiTargetY += (targetY - aiTargetY) * speed;
+    aiPaddle.x = aiTargetX;
+    aiPaddle.y = aiTargetY;
+    aiPaddle.x = Math.min(Math.max(aiPaddle.x, WALL_LEFT + PADDLE_RADIUS), WALL_RIGHT - PADDLE_RADIUS);
+    aiPaddle.y = Math.min(Math.max(aiPaddle.y, WALL_TOP + PADDLE_RADIUS + 15), CENTER_Y - PADDLE_RADIUS - 30);
+}
+
+function handleCollisions() {
+    const maxSpeed = difficulties[currentDifficulty].maxSpeed;
+    
+    const dxPlayer = puck.x - playerPaddle.x;
+    const dyPlayer = puck.y - playerPaddle.y;
+    const distPlayer = Math.hypot(dxPlayer, dyPlayer);
+    if (distPlayer < PUCK_RADIUS + PADDLE_RADIUS) {
+        const angle = Math.atan2(dyPlayer, dxPlayer);
+        const overlap = PUCK_RADIUS + PADDLE_RADIUS - distPlayer;
+        puck.x += Math.cos(angle) * overlap;
+        puck.y += Math.sin(angle) * overlap;
+        const currentSpeed = Math.hypot(puck.vx, puck.vy);
+        const newVx = Math.cos(angle) * currentSpeed * 1.15;
+        const newVy = Math.sin(angle) * currentSpeed * 1.15;
+        const offset = (dxPlayer / PADDLE_RADIUS) * 2;
+        puck.vx = newVx + offset;
+        puck.vy = newVy;
+        if (puck.vy > 0) puck.vy = -Math.abs(puck.vy) - 2;
+        puck.vx = Math.min(Math.max(puck.vx, -maxSpeed), maxSpeed);
+        puck.vy = Math.min(Math.max(puck.vy, -maxSpeed), maxSpeed);
+    }
+    
+    const dxAi = puck.x - aiPaddle.x;
+    const dyAi = puck.y - aiPaddle.y;
+    const distAi = Math.hypot(dxAi, dyAi);
+    if (distAi < PUCK_RADIUS + PADDLE_RADIUS) {
+        const angle = Math.atan2(dyAi, dxAi);
+        const overlap = PUCK_RADIUS + PADDLE_RADIUS - distAi;
+        puck.x += Math.cos(angle) * overlap * 0.7;
+        puck.y += Math.sin(angle) * overlap * 0.7;
+        const currentSpeed = Math.hypot(puck.vx, puck.vy);
+        const power = difficulties[currentDifficulty].power;
+        const newVx = Math.cos(angle) * currentSpeed * power;
+        const newVy = Math.sin(angle) * currentSpeed * power;
+        const offset = (dxAi / PADDLE_RADIUS) * 1.2;
+        puck.vx = newVx + offset;
+        puck.vy = newVy;
+        if (puck.vy < 0) puck.vy = -Math.abs(puck.vy) - 3;
+        else puck.vy = Math.abs(puck.vy) + 3;
+        puck.vx = Math.min(Math.max(puck.vx, -maxSpeed), maxSpeed);
+        puck.vy = Math.min(Math.max(puck.vy, -maxSpeed), maxSpeed);
+    }
+    
+    if (puck.x - PUCK_RADIUS < WALL_LEFT) {
+        puck.x = WALL_LEFT + PUCK_RADIUS;
+        puck.vx = -puck.vx * 0.96;
+    }
+    if (puck.x + PUCK_RADIUS > WALL_RIGHT) {
+        puck.x = WALL_RIGHT - PUCK_RADIUS;
+        puck.vx = -puck.vx * 0.96;
+    }
+    
+    if (puck.y - PUCK_RADIUS < WALL_TOP) {
+        const inGoal = (puck.x > AI_GOAL.x && puck.x < AI_GOAL.x + AI_GOAL.w);
+        if (inGoal) {
+            playerScore++;
+            updateScoreUI();
+            showGoalMessage('player');
+            saveAirhockeyStats(playerScore, totalPlaySeconds);
+            saveGameResult('airhockey', playerScore);
+            if (playerScore >= currentWinScore) {
+                gameActive = false;
+                if (currentDifficulty < difficulties.length - 1) {
+                    currentDifficulty++;
+                    currentDifficultyName = difficulties[currentDifficulty].name;
+                    currentWinScore = difficulties[currentDifficulty].winScore;
+                    setTimeout(() => {
+                        alert(`ПОБЕДА! Переход на ${currentDifficultyName} уровень!`);
+                        resetGame();
+                    }, 500);
+                } else {
+                    setTimeout(() => { alert('ПОБЕДА! Вы прошли игру!'); showDifficultyMenu(); }, 500);
+                }
+            }
+        } else {
+            puck.y = WALL_TOP + PUCK_RADIUS;
+            puck.vy = -puck.vy * 0.96;
+        }
+    }
+    
+    if (puck.y + PUCK_RADIUS > WALL_BOTTOM) {
+        const inGoal = (puck.x > PLAYER_GOAL.x && puck.x < PLAYER_GOAL.x + PLAYER_GOAL.w);
+        if (inGoal) {
+            aiScore++;
+            updateScoreUI();
+            showGoalMessage('ai');
+            if (aiScore >= currentWinScore) {
+                gameActive = false;
+                setTimeout(() => { alert('ПОРАЖЕНИЕ! Игра начата заново.'); showDifficultyMenu(); }, 500);
+            }
+        } else {
+            puck.y = WALL_BOTTOM - PUCK_RADIUS;
+            puck.vy = -puck.vy * 0.96;
+        }
+    }
+}
+
+function updatePuck() {
+    if (!gameActive || paused || isCountdown) return;
+    puck.x += puck.vx;
+    puck.y += puck.vy;
+    handleCollisions();
+    puck.vx *= 0.999;
+    puck.vy *= 0.999;
+}
+
+const hitSound = new Audio('assets/airhockey.mp3');
+hitSound.volume = 0.35;
+const golSound = new Audio('assets/gol.mp3');
+golSound.volume = 0.5;
+const winSound = new Audio('assets/airwin.mp3');
+winSound.volume = 0.5;
+const count3Sound = new Audio('assets/3.mp3');
+count3Sound.volume = 0.5;
+const count2Sound = new Audio('assets/2.mp3');
+count2Sound.volume = 0.5;
+const count1Sound = new Audio('assets/1.mp3');
+count1Sound.volume = 0.5;
+const startedSound = new Audio('assets/started.mp3');
+startedSound.volume = 0.5;
+
+function playHitSound() {
+    if (!gameActive) return;
+    const now = Date.now();
+    if (now - lastPlayTime < 30) return;
+    lastPlayTime = now;
+    try {
+        hitSound.currentTime = 0;
+        hitSound.play();
+    } catch(e) {}
+}
+
+function playGolSound() {
+    try {
+        golSound.currentTime = 0;
+        golSound.play();
+    } catch(e) {}
+}
+
+function playWinSound() {
+    try {
+        winSound.currentTime = 0;
+        winSound.play();
+    } catch(e) {}
+}
+
+function playCountSound(num) {
+    try {
+        if (num === 3) { count3Sound.currentTime = 0; count3Sound.play(); }
+        else if (num === 2) { count2Sound.currentTime = 0; count2Sound.play(); }
+        else if (num === 1) { count1Sound.currentTime = 0; count1Sound.play(); }
+    } catch(e) {}
+}
+
+function playStartedSound() {
+    try {
+        startedSound.currentTime = 0;
+        startedSound.play();
+    } catch(e) {}
+}
+
 function showGoalMessage(goalType) {
     if (goalMessageTimer) clearTimeout(goalMessageTimer);
     const msgDiv = document.getElementById('airhockeyGoalMessage');
@@ -426,7 +541,7 @@ function startCountdown() {
             isCountdown = false;
             const direction = Math.random() < 0.5 ? -1 : 1;
             const angle = (Math.random() - 0.5) * Math.PI / 2.8;
-            const speed = 4.8;
+            const speed = 5.0;
             puck.vx = Math.sin(angle) * speed;
             puck.vy = direction * Math.cos(angle) * speed;
             gameActive = true;
@@ -447,154 +562,6 @@ function startCountdown() {
     runStep();
 }
 
-function handleCollisions() {
-    const maxSpeed = difficulties[currentDifficulty].maxSpeed;
-    
-    const dxPlayer = puck.x - playerPaddle.x;
-    const dyPlayer = puck.y - playerPaddle.y;
-    const distPlayer = Math.hypot(dxPlayer, dyPlayer);
-    if (distPlayer < PUCK_RADIUS + PADDLE_RADIUS) {
-        const angle = Math.atan2(dyPlayer, dxPlayer);
-        const overlap = PUCK_RADIUS + PADDLE_RADIUS - distPlayer;
-        puck.x += Math.cos(angle) * overlap;
-        puck.y += Math.sin(angle) * overlap;
-        const currentSpeed = Math.hypot(puck.vx, puck.vy);
-        const newVx = Math.cos(angle) * currentSpeed * 1.15;
-        const newVy = Math.sin(angle) * currentSpeed * 1.15;
-        const offset = (dxPlayer / PADDLE_RADIUS) * 2;
-        puck.vx = newVx + offset;
-        puck.vy = newVy;
-        if (puck.vy > 0) puck.vy = -Math.abs(puck.vy) - 2;
-        puck.vx = Math.min(Math.max(puck.vx, -maxSpeed), maxSpeed);
-        puck.vy = Math.min(Math.max(puck.vy, -maxSpeed), maxSpeed);
-        playHitSound();
-    }
-    
-    const dxAi = puck.x - aiPaddle.x;
-    const dyAi = puck.y - aiPaddle.y;
-    const distAi = Math.hypot(dxAi, dyAi);
-    if (distAi < PUCK_RADIUS + PADDLE_RADIUS) {
-        const angle = Math.atan2(dyAi, dxAi);
-        const overlap = PUCK_RADIUS + PADDLE_RADIUS - distAi;
-        puck.x += Math.cos(angle) * overlap * 0.7;
-        puck.y += Math.sin(angle) * overlap * 0.7;
-        const currentSpeed = Math.hypot(puck.vx, puck.vy);
-        const power = difficulties[currentDifficulty].power;
-        const newVx = Math.cos(angle) * currentSpeed * power;
-        const newVy = Math.sin(angle) * currentSpeed * power;
-        const offset = (dxAi / PADDLE_RADIUS) * 1.2;
-        puck.vx = newVx + offset;
-        puck.vy = newVy;
-        if (puck.vy < 0) puck.vy = -Math.abs(puck.vy) - 3;
-        else puck.vy = Math.abs(puck.vy) + 3;
-        puck.vx = Math.min(Math.max(puck.vx, -maxSpeed), maxSpeed);
-        puck.vy = Math.min(Math.max(puck.vy, -maxSpeed), maxSpeed);
-        playHitSound();
-    }
-    
-    if (puck.x - PUCK_RADIUS < WALL_LEFT) {
-        puck.x = WALL_LEFT + PUCK_RADIUS;
-        puck.vx = -puck.vx * 0.96;
-        playHitSound();
-    }
-    if (puck.x + PUCK_RADIUS > WALL_RIGHT) {
-        puck.x = WALL_RIGHT - PUCK_RADIUS;
-        puck.vx = -puck.vx * 0.96;
-        playHitSound();
-    }
-    
-    if (puck.y - PUCK_RADIUS < WALL_TOP) {
-        const inGoal = (puck.x > AI_GOAL.x && puck.x < AI_GOAL.x + AI_GOAL.w);
-        if (inGoal) {
-            playerScore++;
-            updateScoreUI();
-            showGoalMessage('player');
-            saveAirhockeyStats(playerScore, totalPlaySeconds);
-            saveGameResult('airhockey', playerScore);
-            if (playerScore >= currentWinScore) {
-                gameActive = false;
-                playWinSound();
-                if (currentDifficulty < difficulties.length - 1) {
-                    currentDifficulty++;
-                    currentDifficultyName = difficulties[currentDifficulty].name;
-                    currentWinScore = difficulties[currentDifficulty].winScore;
-                    setTimeout(() => {
-                        alert(`ПОБЕДА! Переход на ${currentDifficultyName} уровень!`);
-                        resetGame();
-                    }, 500);
-                } else {
-                    setTimeout(() => { alert('ПОБЕДА! Вы прошли игру!'); showDifficultyMenu(); }, 500);
-                }
-            }
-        } else {
-            puck.y = WALL_TOP + PUCK_RADIUS;
-            puck.vy = -puck.vy * 0.96;
-            playHitSound();
-        }
-    }
-    
-    if (puck.y + PUCK_RADIUS > WALL_BOTTOM) {
-        const inGoal = (puck.x > PLAYER_GOAL.x && puck.x < PLAYER_GOAL.x + PLAYER_GOAL.w);
-        if (inGoal) {
-            aiScore++;
-            updateScoreUI();
-            showGoalMessage('ai');
-            if (aiScore >= currentWinScore) {
-                gameActive = false;
-                playWinSound();
-                setTimeout(() => { alert('ПОРАЖЕНИЕ! Игра начата заново.'); showDifficultyMenu(); }, 500);
-            }
-        } else {
-            puck.y = WALL_BOTTOM - PUCK_RADIUS;
-            puck.vy = -puck.vy * 0.96;
-            playHitSound();
-        }
-    }
-}
-
-let aiTargetX = CENTER_X;
-let aiTargetY = WALL_TOP + 55;
-
-function updateAI() {
-    if (!gameActive || paused || isCountdown) return;
-    let targetX = CENTER_X;
-    let targetY = WALL_TOP + 55;
-    const isPuckInAITerritory = puck.y - PUCK_RADIUS < CENTER_Y - 20;
-    const isPuckNearWall = (puck.x - PUCK_RADIUS < WALL_LEFT + 25) || (puck.x + PUCK_RADIUS > WALL_RIGHT - 25);
-    const isPuckInCorner = isPuckNearWall && (puck.y - PUCK_RADIUS < WALL_TOP + 40);
-    
-    if (isPuckInAITerritory && !isPuckInCorner) {
-        targetX = puck.x;
-        targetY = puck.y;
-        const safeMargin = 28;
-        targetX = Math.min(Math.max(targetX, WALL_LEFT + PADDLE_RADIUS + safeMargin), WALL_RIGHT - PADDLE_RADIUS - safeMargin);
-        targetY = Math.min(Math.max(targetY, WALL_TOP + PADDLE_RADIUS + 15), CENTER_Y - PADDLE_RADIUS - 30);
-    } else if (isPuckInCorner) {
-        targetX = CENTER_X;
-        targetY = WALL_TOP + 50;
-    }
-    
-    let speed = difficulties[currentDifficulty].returnSpeed;
-    if (isPuckInAITerritory && !isPuckInCorner) {
-        speed = difficulties[currentDifficulty].aiSpeed;
-    }
-    aiTargetX += (targetX - aiTargetX) * speed;
-    aiTargetY += (targetY - aiTargetY) * speed;
-    aiPaddle.x = aiTargetX;
-    aiPaddle.y = aiTargetY;
-    aiPaddle.x = Math.min(Math.max(aiPaddle.x, WALL_LEFT + PADDLE_RADIUS), WALL_RIGHT - PADDLE_RADIUS);
-    aiPaddle.y = Math.min(Math.max(aiPaddle.y, WALL_TOP + PADDLE_RADIUS + 10), CENTER_Y - PADDLE_RADIUS - 20);
-}
-
-function updatePuck() {
-    if (!gameActive || paused || isCountdown) return;
-    puck.x += puck.vx;
-    puck.y += puck.vy;
-    handleCollisions();
-    puck.vx *= 0.999;
-    puck.vy *= 0.999;
-}
-
 canvas.addEventListener('mousemove', (e) => {
     if (!gameActive || paused || isCountdown) return;
     const rect = canvas.getBoundingClientRect();
@@ -603,7 +570,7 @@ canvas.addEventListener('mousemove', (e) => {
     let mouseX = (e.clientX - rect.left) * scaleX;
     let mouseY = (e.clientY - rect.top) * scaleY;
     playerTargetX = Math.min(Math.max(mouseX, WALL_LEFT + PADDLE_RADIUS), WALL_RIGHT - PADDLE_RADIUS);
-    playerTargetY = Math.min(Math.max(mouseY, CENTER_Y + 18 + PADDLE_RADIUS), WALL_BOTTOM - PADDLE_RADIUS);
+    playerTargetY = Math.min(Math.max(mouseY, CENTER_Y + 30 + PADDLE_RADIUS), WALL_BOTTOM - PADDLE_RADIUS);
 });
 
 function resetGame() {
@@ -614,13 +581,13 @@ function resetGame() {
     aiScore = 0;
     updateScoreUI();
     playerPaddle.x = CENTER_X;
-    playerPaddle.y = H - 80;
+    playerPaddle.y = H - 100;
     playerTargetX = CENTER_X;
-    playerTargetY = H - 80;
+    playerTargetY = H - 100;
     aiPaddle.x = CENTER_X;
-    aiPaddle.y = WALL_TOP + 55;
+    aiPaddle.y = WALL_TOP + 70;
     aiTargetX = CENTER_X;
-    aiTargetY = WALL_TOP + 55;
+    aiTargetY = WALL_TOP + 70;
     puck.x = CENTER_X;
     puck.y = CENTER_Y;
     puck.vx = 0;
@@ -667,30 +634,14 @@ function drawField() {
     ctx.beginPath();
     ctx.strokeStyle = '#2266cc';
     ctx.lineWidth = 2.5;
-    ctx.arc(CENTER_X, CENTER_Y, 48, 0, Math.PI * 2);
+    ctx.arc(CENTER_X, CENTER_Y, 55, 0, Math.PI * 2);
     ctx.stroke();
     ctx.fillStyle = '#2266cc';
     ctx.beginPath();
-    ctx.arc(CENTER_X - 135, CENTER_Y, 4, 0, Math.PI * 2);
+    ctx.arc(CENTER_X - 150, CENTER_Y, 5, 0, Math.PI * 2);
     ctx.fill();
     ctx.beginPath();
-    ctx.arc(CENTER_X + 135, CENTER_Y, 4, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.strokeStyle = '#ff4444';
-    ctx.lineWidth = 2;
-    ctx.moveTo(WALL_LEFT, CENTER_Y - 100);
-    ctx.lineTo(WALL_RIGHT, CENTER_Y - 100);
-    ctx.stroke();
-    ctx.moveTo(WALL_LEFT, CENTER_Y + 100);
-    ctx.lineTo(WALL_RIGHT, CENTER_Y + 100);
-    ctx.stroke();
-    ctx.fillStyle = '#2266cc';
-    ctx.beginPath();
-    ctx.arc(CENTER_X, CENTER_Y - 75, 3, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(CENTER_X, CENTER_Y + 75, 3, 0, Math.PI * 2);
+    ctx.arc(CENTER_X + 150, CENTER_Y, 5, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = '#2a2a3a';
     ctx.fillRect(AI_GOAL.x, AI_GOAL.y, AI_GOAL.w, AI_GOAL.h);
@@ -730,7 +681,7 @@ function drawPuck() {
     ctx.fill();
     ctx.fillStyle = '#4488ff';
     ctx.beginPath();
-    ctx.arc(puck.x, puck.y, PUCK_RADIUS - 4, 0, Math.PI * 2);
+    ctx.arc(puck.x, puck.y, PUCK_RADIUS - 5, 0, Math.PI * 2);
     ctx.fill();
     ctx.shadowBlur = 0;
 }
@@ -751,7 +702,6 @@ function animate() {
 }
 
 function init() {
-    preloadSounds();
     showDifficultyMenu();
     animate();
 }
