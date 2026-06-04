@@ -750,45 +750,47 @@ kbd {
     100% { transform: translateY(1000px) rotate(360deg); opacity: 0; }
 }
 
-/* ========== PAC-MAN ========== */
+/* ========== PAC-MAN - УМЕНЬШЕННЫЙ И ОТЦЕНТРИРОВАННЫЙ ========== */
 .pacman-game-layout {
     display: flex;
     justify-content: center;
-    align-items: flex-start;
+    align-items: center;
     gap: 30px;
     padding: 30px 20px;
     flex-wrap: wrap;
     background: var(--page-bg);
+    min-height: 60vh;
 }
 
 .pacman-game-card {
     background: var(--project-card-bg);
-    padding: 25px;
-    border-radius: 28px;
+    padding: 20px;
+    border-radius: 24px;
     box-shadow: var(--box-shadow);
 }
 
 .pacman-game-title {
     text-align: center;
-    font-size: 34px;
-    margin-bottom: 14px;
-    letter-spacing: 4px;
+    font-size: 28px;
+    margin-bottom: 12px;
+    letter-spacing: 3px;
     color: var(--text-color);
 }
 
 .pacman-board {
     position: relative;
-    width: 608px;
-    height: 640px;
+    width: 456px;
+    height: 480px;
     background: black;
     overflow: hidden;
-    border-radius: 18px;
+    border-radius: 16px;
+    margin: 0 auto;
 }
 
 .pacman-cell {
     position: absolute;
-    width: 32px;
-    height: 32px;
+    width: 24px;
+    height: 24px;
 }
 
 .pacman-wall {
@@ -797,8 +799,8 @@ kbd {
 }
 
 .pacman-dot {
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
     background: #ffd54a;
     border-radius: 50%;
     position: absolute;
@@ -808,8 +810,8 @@ kbd {
 }
 
 .pacman-power {
-    width: 14px;
-    height: 14px;
+    width: 11px;
+    height: 11px;
     background: #ff9800;
     border-radius: 50%;
     position: absolute;
@@ -821,8 +823,8 @@ kbd {
 .pacman-player,
 .pacman-ghost {
     position: absolute;
-    width: 28px;
-    height: 28px;
+    width: 21px;
+    height: 21px;
     z-index: 5;
     image-rendering: pixelated;
     transition: left .12s linear, top .12s linear, transform .12s linear;
@@ -830,26 +832,26 @@ kbd {
 
 .pacman-side-panel {
     background: var(--project-card-bg);
-    width: 240px;
-    border-radius: 28px;
-    padding: 25px;
+    width: 200px;
+    border-radius: 24px;
+    padding: 20px;
     box-shadow: var(--box-shadow);
 }
 
 .pacman-info {
-    margin-bottom: 30px;
+    margin-bottom: 24px;
     text-align: center;
 }
 
 .pacman-info-title {
-    font-size: 12px;
+    font-size: 11px;
     letter-spacing: 2px;
     color: var(--text-secondary);
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .pacman-info-value {
-    font-size: 36px;
+    font-size: 28px;
     font-weight: bold;
     color: var(--text-color);
 }
@@ -857,18 +859,19 @@ kbd {
 .pacman-buttons {
     display: flex;
     justify-content: center;
-    gap: 15px;
-    margin-top: 20px;
+    gap: 12px;
+    margin-top: 16px;
 }
 
 .pacman-btn {
     border: none;
     background: var(--accent);
     color: white;
-    padding: 12px 20px;
+    padding: 8px 16px;
     border-radius: 30px;
     cursor: pointer;
     font-weight: bold;
+    font-size: 13px;
     transition: all 0.2s;
 }
 
@@ -878,11 +881,11 @@ kbd {
 }
 
 .pacman-controls-info {
-    margin-top: 15px;
+    margin-top: 12px;
     display: flex;
     justify-content: center;
-    gap: 20px;
-    font-size: 12px;
+    gap: 16px;
+    font-size: 11px;
     color: var(--text-secondary);
 }
 
@@ -1847,25 +1850,6 @@ kbd {
 }
 
 /* ========== ОБЩИЕ МЕДИА-ЗАПРОСЫ ========== */
-@media (max-width: 1100px) {
-    .pacman-game-layout {
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    .pacman-board {
-        width: 100%;
-        max-width: 550px;
-        height: auto;
-        aspect-ratio: 608 / 640;
-    }
-    
-    .pacman-side-panel {
-        width: 100%;
-        max-width: 320px;
-    }
-}
-
 @media (max-width: 768px) {
     .controls-panel {
         flex-direction: column;
@@ -1956,11 +1940,37 @@ kbd {
         width: 100%;
         max-width: 350px;
     }
-}
 
-@media (max-width: 640px) {
+    /* PAC-MAN мобильная адаптация */
+    .pacman-game-layout {
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+    }
+    
     .pacman-board {
-        max-width: 450px;
+        width: 380px;
+        height: 400px;
+    }
+    
+    .pacman-cell {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .pacman-player,
+    .pacman-ghost {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .pacman-side-panel {
+        width: 180px;
+        padding: 15px;
+    }
+    
+    .pacman-info-value {
+        font-size: 24px;
     }
 }
 
@@ -2035,19 +2045,6 @@ kbd {
         min-width: 80px;
     }
     
-    .pacman-board {
-        max-width: 350px;
-    }
-    
-    .pacman-info-value {
-        font-size: 28px;
-    }
-    
-    .pacman-btn {
-        padding: 8px 15px;
-        font-size: 12px;
-    }
-    
     .snake-btn {
         padding: 6px 20px;
         font-size: 0.85rem;
@@ -2100,6 +2097,41 @@ kbd {
         padding: 5px 15px;
         font-size: 12px;
     }
+
+    /* PAC-MAN маленькие экраны */
+    .pacman-board {
+        width: 304px;
+        height: 320px;
+    }
+    
+    .pacman-cell {
+        width: 16px;
+        height: 16px;
+    }
+    
+    .pacman-player,
+    .pacman-ghost {
+        width: 14px;
+        height: 14px;
+    }
+    
+    .pacman-game-title {
+        font-size: 22px;
+    }
+    
+    .pacman-side-panel {
+        width: 160px;
+        padding: 12px;
+    }
+    
+    .pacman-info-value {
+        font-size: 20px;
+    }
+    
+    .pacman-btn {
+        padding: 6px 12px;
+        font-size: 11px;
+    }
 }
 
 /* ========== 2K И 4K МОНИТОРЫ ========== */
@@ -2116,16 +2148,6 @@ kbd {
         max-width: 850px;
     }
     
-    .pacman-board {
-        width: 750px;
-        height: 790px;
-    }
-    
-    .pacman-cell {
-        width: 40px;
-        height: 40px;
-    }
-    
     .game-board .cell {
         width: 120px;
         height: 120px;
@@ -2139,6 +2161,23 @@ kbd {
     .wheel-wrapper {
         width: 500px;
         height: 500px;
+    }
+
+    /* PAC-MAN 2K */
+    .pacman-board {
+        width: 532px;
+        height: 560px;
+    }
+    
+    .pacman-cell {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .pacman-player,
+    .pacman-ghost {
+        width: 24px;
+        height: 24px;
     }
 }
 
@@ -2159,16 +2198,6 @@ kbd {
         font-size: 2.5rem;
     }
     
-    .pacman-board {
-        width: 950px;
-        height: 1000px;
-    }
-    
-    .pacman-cell {
-        width: 50px;
-        height: 50px;
-    }
-    
     .game-board .cell {
         width: 150px;
         height: 150px;
@@ -2182,5 +2211,35 @@ kbd {
     .wheel-result {
         font-size: 32px;
         padding: 20px;
+    }
+
+    /* PAC-MAN 4K */
+    .pacman-board {
+        width: 608px;
+        height: 640px;
+    }
+    
+    .pacman-cell {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .pacman-player,
+    .pacman-ghost {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .pacman-game-title {
+        font-size: 34px;
+    }
+    
+    .pacman-side-panel {
+        width: 220px;
+        padding: 25px;
+    }
+    
+    .pacman-info-value {
+        font-size: 32px;
     }
 }
