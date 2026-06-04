@@ -237,7 +237,7 @@ function stopPlayTimer() {
     if (gameActive) saveAirhockeyStats(playerScore, totalPlaySeconds);
 }
 
-// Базовые скорости (не зависят от FPS)
+
 const BASE_AI_SPEED = 0.07;
 const BASE_RETURN_SPEED = 0.04;
 const BASE_POWER = 0.9;
@@ -442,7 +442,7 @@ function updatePuck() {
 }
 
 const hitSound = new Audio('assets/airhockey.mp3');
-hitSound.volume = 0.35;
+hitSound.volume = 0.4;
 const golSound = new Audio('assets/gol.mp3');
 golSound.volume = 0.5;
 const winSound = new Audio('assets/airwin.mp3');
@@ -459,11 +459,11 @@ startedSound.volume = 0.5;
 function playHitSound() {
     if (!gameActive) return;
     const now = Date.now();
-    if (now - lastPlayTime < 30) return;
+    if (now - lastPlayTime < 40) return;
     lastPlayTime = now;
     try {
         hitSound.currentTime = 0;
-        hitSound.play();
+        hitSound.play().catch(e => console.log('Sound error:', e));
     } catch(e) {}
 }
 
